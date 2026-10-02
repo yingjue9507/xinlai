@@ -26,6 +26,7 @@ android/local.properties
 **/prisma/*.db-journal
 *.sqlite
 *.sqlite3
+uniapp1.0/backend/uploads/
 
 # Release/debug artifacts and temporary exports
 *.apk

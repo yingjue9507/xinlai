@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>心来 - 审核识别结果</title>
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+<div class="app-shell">
+  <header class="topbar safe-top">
+    <button class="top-action" id="back" type="button">‹</button>
+    <div class="brand"><div class="brand-mark">心</div><div><h1>审核识别结果</h1><small id="ledger-label">正在加载礼簿</small></div></div>
+    <div style="width:42px"></div>
+  </header>
+  <main class="page">
+    <p class="eyebrow">REVIEW BEFORE IMPORT</p>
+    <h2 class="page-title">逐条确认，再写入礼簿</h2>
+    <p class="page-subtitle">AI 只负责整理线索。黄色标记代表需要你重点检查的字段。</p>
+
+    <section class="ocr-card">
+      <div class="ocr-progress"><span id="batch-status">识别批次</span><strong id="batch-count">正在加载</strong></div>
+      <div id="page-list" class="ocr-page-list"></div>
+    </section>
+
+    <section class="ocr-card">
+      <div class="section-head" style="margin-bottom:12px"><div><h3 id="page-title">第 1 页</h3><p class="data-tools-subtitle">点击任意记录进行修改</p></div><span id="page-status" class="status-badge">识别中</span></div>
+      <div id="image-wrap" class="hidden"><img id="page-image" class="ocr-image" alt="手写礼簿原图"></div>
+      <div id="retry-wrap" class="hidden" style="margin-top:12px">
+        <p id="retry-message" class="message error"></p>
+        <label class="btn btn-light btn-block file-button" for="retry-input">重新选择图片<input class="ocr-file-input" id="retry-input" type="file" accept="image/jpeg,image/png,image/webp"></label>
+      </div>
+      <div id="row-list" class="ocr-page-list"></div>
+    </section>
+
+    <section class="ocr-card">
+      <div class="ocr-actions">
+        <button class="btn btn-light btn-block" id="continue-btn" type="button">继续拍下一页</button>
+        <button class="btn btn-primary btn-block" id="confirm-btn" type="button">确认导入全部记录</button>
+        <button class="btn btn-ghost btn-block" id="discard-btn" type="button">放弃这个批次</button>
+      </div>
+      <div id="action-message" class="message hidden"></div>
+    </section>
+  </main>
+  <nav class="bottom-nav safe-bottom"><button class="nav-item" data-nav="home" type="button"><b>⌂</b>首页</button><button class="nav-item" data-nav="ledger" type="button"><b>▣</b>礼簿</button><button class="nav-item nav-ai active" type="button"><span class="nav-ai-mark">✦</span><span class="nav-ai-label">AI识别</span></button><button class="nav-item" data-nav="contact" type="button"><b>◉</b>联系人</button><button class="nav-item" data-nav="profile" type="button"><b>◌</b>我的</button></nav>
+</div>
+
+<div id="editor" class="ocr-modal-backdrop hidden">
+  <form id="editor-form" class="ocr-modal">
+    <div class="modal-head"><h2>修改这条记录</h2><button class="top-action" id="close-editor" type="button">×</button></div>
+    <div class="form-grid">
+      <div class="field"><label for="edit-name">联系人</label><input id="edit-name" required maxlength="50"></div>
+      <div class="field"><label for="edit-amount">金额</label><input id="edit-amount" type="number" min="0" step="0.01" inputmode="decimal"></div>
+      <div class="field"><label for="edit-type">收送方向</label><select id="edit-type"><option value="received">收到</option><option value="sent">送出</option></select></div>
+      <div class="field"><label for="edit-date">日期</label><input id="edit-date" type="date" required></div>
+      <label class="check-field"><input id="edit-gift" type="checkbox"> 这是物品，不记录金额</label>
+      <div class="field"><label for="edit-gift-description">物品描述</label><input id="edit-gift-description" maxlength="100" placeholder="例如：茶叶、酒水"></div>
+      <div class="field"><label for="edit-note">备注</label><textarea id="edit-note" rows="3" maxlength="200"></textarea></div>
+    </div>
+    <div id="edit-message" class="message hidden"></div>
+    <div class="modal-actions"><button class="btn btn-ghost" id="cancel-editor" type="button">取消</button><button class="btn btn-primary" id="save-editor" type="submit">保存修改</button></div>
+  </form>
+</div>
+<div id="toast" class="toast"></div>
+<script>
+  const token = localStorage.getItem('token'); if (!token) location.replace('P-LOGIN.html');
+  const params = new URLSearchParams(location.search); const sessionId = params.get('session') || localStorage.getItem('OCR_SESSION_ID') || ''; let currentPageId = params.get('page') || ''; let sessionData = null; let currentPage = null; let editingRow = null; let imageUrl = '';
+  const $ = id => document.getElementById(id); const apiBase = () => (localStorage.getItem('API_BASE_OVERRIDE') || 'http://192.168.1.83:3030/api').replace(/\/+$/, '');
+  const toast = (text, error = false) => { const node = $('toast'); node.textContent = text; node.className = 'toast show' + (error ? ' error' : ''); clearTimeout(window.__toast); window.__toast = setTimeout(() => node.className = 'toast', 2800); };
+  async function jsonRequest(path, options = {}) { const response = await fetch(apiBase() + path, { ...options, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, ...(options.headers || {}) } }); const result = await response.json().catch(() => ({})); if (response.status === 401) { localStorage.removeItem('token'); location.replace('P-LOGIN.html'); throw new Error('登录已过期'); } if (!response.ok || result.success === false) throw new Error(result.message || '请求失败'); return result.data; }
+  const dateValue = value => String(value || '').slice(0, 10);
+  const directionLabel = value => value === 'sent' ? '送出' : '收到';
+  function setActionMessage(text, error = false) { $('action-message').textContent = text; $('action-message').className = 'message show' + (error ? ' error' : ' success'); }
+  function renderPages() { $('page-list').innerHTML = sessionData.pages.map(page => `<button class="ocr-page-item" type="button" data-page="${page.id}"><span><strong>第 ${page.pageNumber} 页</strong><span>${page.status === 'ready' ? `${page.rows.length} 条记录` : (page.errorMessage || '识别失败')}</span></span><b>${page.id === currentPage.id ? '查看中' : '查看'}</b></button>`).join(''); document.querySelectorAll('[data-page]').forEach(item => item.onclick = () => { currentPageId = item.dataset.page; renderCurrentPage(); }); }
+  function renderRows() { const list = $('row-list'); if (!currentPage.rows.length) { list.innerHTML = '<div class="ocr-empty">这一页没有识别到记录。请重新拍摄，尽量让整页平整、清晰并避免反光。</div>'; return; } list.innerHTML = currentPage.rows.map((row, index) => `<button class="ocr-row ${row.needsReview ? 'warning' : ''}" type="button" data-row="${row.id}"><span class="ocr-row-head"><strong>${index + 1}. ${row.contactName || '未识别联系人'}</strong><b>${row.isGiftItem ? '物品' : '¥ ' + Number(row.amount || 0).toFixed(2)}</b></span><span class="ocr-row-meta">${directionLabel(row.recordType)} · ${dateValue(row.recordDate)}${row.giftDescription ? ' · ' + row.giftDescription : ''}${row.note ? ' · ' + row.note : ''}</span>${row.needsReview ? `<span class="ocr-warning">需要审核：${row.reviewNote || '请检查字段'}</span>` : ''}</button>`).join(''); document.querySelectorAll('[data-row]').forEach(item => item.onclick = () => openEditor(currentPage.rows.find(row => row.id === item.dataset.row))); }
+  async function loadImage() { if (imageUrl) URL.revokeObjectURL(imageUrl); try { const response = await fetch(apiBase() + '/ocr/pages/' + encodeURIComponent(currentPage.id) + '/image', { headers: { Authorization: 'Bearer ' + token } }); if (!response.ok) throw new Error('原图暂时无法加载'); imageUrl = URL.createObjectURL(await response.blob()); $('page-image').src = imageUrl; $('image-wrap').classList.remove('hidden'); } catch (error) { $('image-wrap').classList.add('hidden'); toast(error.message, true); } }
+  function renderCurrentPage() { currentPage = sessionData.pages.find(page => page.id === currentPageId) || sessionData.pages[sessionData.pages.length - 1]; if (!currentPage) return; $('page-title').textContent = `第 ${currentPage.pageNumber} 页`; $('page-status').textContent = currentPage.status === 'ready' ? '已识别' : '需要重试'; $('page-status').className = 'status-badge ' + (currentPage.status === 'ready' ? 'success' : 'warning'); renderPages(); renderRows(); if (currentPage.status === 'failed') { $('retry-wrap').classList.remove('hidden'); $('retry-message').textContent = currentPage.errorMessage || '这一页识别失败，请重新选择图片重试'; } else { $('retry-wrap').classList.add('hidden'); loadImage(); } }
+  function openEditor(row) { editingRow = row; $('edit-name').value = row.contactName || ''; $('edit-amount').value = row.isGiftItem ? '' : Number(row.amount || 0); $('edit-type').value = row.recordType || 'received'; $('edit-date').value = dateValue(row.recordDate); $('edit-gift').checked = Boolean(row.isGiftItem); $('edit-gift-description').value = row.giftDescription || ''; $('edit-note').value = row.note || ''; $('edit-message').className = 'message hidden'; $('editor').classList.remove('hidden'); }
+  function closeEditor() { $('editor').classList.add('hidden'); editingRow = null; }
+  $('editor-form').onsubmit = async event => { event.preventDefault(); if (!editingRow) return; const button = $('save-editor'); button.disabled = true; try { const data = await jsonRequest('/ocr/pages/' + encodeURIComponent(currentPage.id) + '/rows/' + encodeURIComponent(editingRow.id), { method: 'PUT', body: JSON.stringify({ contactName: $('edit-name').value.trim(), amount: $('edit-amount').value, recordType: $('edit-type').value, recordDate: $('edit-date').value, isGiftItem: $('edit-gift').checked, giftDescription: $('edit-gift-description').value.trim(), note: $('edit-note').value.trim() }) }); const target = currentPage.rows.find(row => row.id === editingRow.id); Object.assign(target, data); closeEditor(); renderRows(); renderPages(); toast('记录已更新'); } catch (error) { $('edit-message').textContent = error.message; $('edit-message').className = 'message show error'; } finally { button.disabled = false; } };
+  $('edit-gift').onchange = event => { $('edit-amount').disabled = event.target.checked; if (event.target.checked) $('edit-amount').value = ''; };
+  $('close-editor').onclick = closeEditor; $('cancel-editor').onclick = closeEditor; $('editor').onclick = event => { if (event.target === $('editor')) closeEditor(); };
+  $('retry-input').onchange = async event => { const file = event.target.files?.[0]; if (!file || !currentPage) return; const form = new FormData(); form.append('image', file, file.name || 'ledger-page.jpg'); $('retry-input').disabled = true; try { const response = await fetch(apiBase() + '/ocr/pages/' + encodeURIComponent(currentPage.id) + '/retry', { method: 'POST', headers: { Authorization: 'Bearer ' + token }, body: form }); const result = await response.json().catch(() => ({})); if (!response.ok || result.success === false) throw new Error(result.message || '重试失败'); sessionData = result.data; currentPageId = currentPage.id; renderCurrentPage(); toast('已重新识别'); } catch (error) { toast(error.message, true); } finally { $('retry-input').disabled = false; $('retry-input').value = ''; } };
+  $('continue-btn').onclick = () => location.href = 'P-OCR_CAPTURE.html?session=' + encodeURIComponent(sessionId);
+  $('confirm-btn').onclick = async () => { if (!sessionData?.pages?.length) return; const button = $('confirm-btn'); button.disabled = true; setActionMessage('正在写入礼簿并更新联系人统计，请稍候'); try { const data = await jsonRequest('/ocr/sessions/' + encodeURIComponent(sessionId) + '/confirm', { method: 'POST', body: '{}' }); localStorage.removeItem('OCR_SESSION_ID'); setActionMessage(`已导入 ${data.recordCount} 条记录`); setTimeout(() => location.replace('P-LEDGER_DETAIL.html?id=' + encodeURIComponent(sessionData.ledgerId)), 500); } catch (error) { setActionMessage(error.message, true); button.disabled = false; } };
+  $('discard-btn').onclick = async () => { if (!confirm('放弃后，本批次图片和识别结果都会删除，确定继续吗？')) return; try { await jsonRequest('/ocr/sessions/' + encodeURIComponent(sessionId), { method: 'DELETE' }); localStorage.removeItem('OCR_SESSION_ID'); location.replace('P-HOME.html?tab=ledger'); } catch (error) { toast(error.message, true); } };
+  document.querySelectorAll('[data-nav]').forEach(item => item.onclick = () => location.replace('P-HOME.html?tab=' + item.dataset.nav)); $('back').onclick = () => location.href = 'P-OCR_CAPTURE.html?session=' + encodeURIComponent(sessionId);
+  async function init() { if (!sessionId) { location.replace('P-OCR_CAPTURE.html'); return; } try { sessionData = await jsonRequest('/ocr/sessions/' + encodeURIComponent(sessionId)); localStorage.setItem('OCR_SESSION_ID', sessionId); $('ledger-label').textContent = `${sessionData.ledgerName || '未命名礼簿'} · ${sessionData.occasion || ''}`; $('batch-status').textContent = '当前批次'; $('batch-count').textContent = `${sessionData.pages.length} 页 · ${sessionData.pages.reduce((sum, page) => sum + page.rows.length, 0)} 条记录`; currentPageId = currentPageId || sessionData.pages[sessionData.pages.length - 1]?.id || ''; renderCurrentPage(); } catch (error) { toast(error.message, true); setTimeout(() => location.replace('P-OCR_CAPTURE.html'), 900); } }
+  init();
+</script>
+</body>
+</html>

@@ -21,6 +21,7 @@ model User {
   contacts        Contact[]
   massSendLogs    MassSendLog[]
   announcements   Announcement[]
+  ocrSessions     OcrSession[]
 
   @@map("users")
 }
@@ -39,6 +40,7 @@ model Ledger {
   user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   records        Record[]
   massSendLogs   MassSendLog[]
+  ocrSessions    OcrSession[]
 
   @@index([userId])
   @@map("ledgers")
@@ -65,6 +67,67 @@ model Record {
   @@index([contactName])
   @@index([recordType])
   @@map("records")
+}
+
+model OcrSession {
+  id         String      @id @default(uuid())
+  userId     String      @map("user_id")
+  ledgerId   String      @map("ledger_id")
+  status     String      @default("draft")
+  expiresAt  DateTime    @map("expires_at")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ledger     Ledger      @relation(fields: [ledgerId], references: [id], onDelete: Cascade)
+  pages      OcrPage[]
+
+  @@index([userId])
+  @@index([ledgerId])
+  @@index([status, expiresAt])
+  @@map("ocr_sessions")
+}
+
+model OcrPage {
+  id          String    @id @default(uuid())
+  sessionId   String    @map("session_id")
+  pageNumber  Int       @map("page_number")
+  imagePath   String    @map("image_path")
+  status      String    @default("processing")
+  rawResponse String?   @map("raw_response")
+  errorMessage String?  @map("error_message")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  session     OcrSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  rows        OcrRow[]
+
+  @@unique([sessionId, pageNumber])
+  @@index([sessionId])
+  @@map("ocr_pages")
+}
+
+model OcrRow {
+  id              String   @id @default(uuid())
+  pageId          String   @map("page_id")
+  rowIndex        Int      @map("row_index")
+  contactName     String   @default("") @map("contact_name")
+  amount          Float    @default(0)
+  isGiftItem      Boolean  @default(false) @map("is_gift_item")
+  giftDescription String?  @map("gift_description")
+  note            String?
+  recordDate      DateTime
+  recordType      String   @default("received") @map("record_type")
+  needsReview     Boolean  @default(true) @map("needs_review")
+  reviewNote      String?  @map("review_note")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  page            OcrPage  @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@unique([pageId, rowIndex])
+  @@index([pageId])
+  @@map("ocr_rows")
 }
 
 model Contact {
