@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心来 - Excel批量导入</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#8B5CF6',
+                        tertiary: '#EC4899',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        info: '#06B6D4',
+                        'text-primary': '#1E293B',
+                        'text-secondary': '#64748B',
+                        'bg-primary': '#EEF2FF',
+                        'bg-secondary': '#F3E8FF',
+                        'card-bg': '#FFFFFF',
+                        'border-light': '#E2E8F0'
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        'primary-btn': '0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.2)'
+                    },
+                    borderRadius: {
+                        'xl': '0.75rem',
+                        '2xl': '1rem',
+                        '3xl': '1.5rem'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #EEF2FF 0%, #F3E8FF 100%);
+        }
+        
+        .primary-gradient {
+            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .primary-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .primary-gradient:hover::before {
+            opacity: 1;
+        }
+        
+        .secondary-gradient {
+            background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+        }
+        
+        .status-bar {
+            background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+        }
+        
+        .cloud-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+        }
+        
+        .dynamic-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dynamic-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .safe-top {
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        .mapping-row {
+            transition: all 0.2s ease;
+        }
+        
+        .mapping-row:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        .file-upload-area {
+            border: 2px dashed #E2E8F0;
+            transition: all 0.3s ease;
+        }
+        
+        .file-upload-area:hover {
+            border-color: #3B82F6;
+            background-color: rgba(59, 130, 246, 0.02);
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="gradient-bg cloud-pattern min-h-screen">
+    <!-- iOS状态栏 -->
+    <div id="status-bar" class="status-bar text-white text-sm flex justify-between items-center px-4 py-1 safe-top">
+        <div class="flex items-center space-x-1">
+            <span class="font-medium">9:41</span>
+        </div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-xs"></i>
+            <i class="fas fa-wifi text-xs"></i>
+            <div class="w-6 h-3 border border-white rounded-sm">
+                <div class="w-4 h-1.5 bg-white rounded-sm m-0.5"></div>
+            </div>
+        </div>
+    </div>
+    <!-- 主容器 -->
+    <div id="main-container" class="max-w-sm mx-auto bg-white min-h-screen relative">
+        <!-- 顶部导航栏 -->
+        <header id="top-header" class="bg-white px-4 py-3 border-b border-border-light">
+            <div id="header-content" class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button id="back-btn" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition-all">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h1 class="text-lg font-bold text-text-primary">Excel批量导入</h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main id="main-content" class="px-4 py-6">
+            <!-- 文件选择区域 -->
+            <section id="file-selection-section" class="mb-6">
+                <div id="file-upload-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <div id="file-upload-area" class="file-upload-area rounded-2xl p-8 text-center cursor-pointer">
+                        <div id="upload-icon" class="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-file-excel text-primary text-2xl"></i>
+                        </div>
+                        <h3 id="upload-title" class="text-lg font-semibold text-text-primary mb-2">选择Excel文件</h3>
+                        <p id="upload-description" class="text-sm text-text-secondary mb-4">支持 .xlsx、.xls、.csv 格式</p>
+                        <button id="select-file-btn" class="primary-gradient text-white px-6 py-3 rounded-2xl font-medium shadow-primary-btn">
+                            <i class="fas fa-folder-open mr-2"></i>选择文件
+                        </button>
+                    </div>
+                    
+                    <!-- 已选择文件信息 -->
+                    <div id="selected-file-info" class="hidden mt-4 p-4 bg-success/5 rounded-2xl border border-success/20">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-success/10 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-file-excel text-success"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div id="file-name" class="font-medium text-text-primary"></div>
+                                <div id="file-size" class="text-sm text-text-secondary"></div>
+                            </div>
+                            <button id="change-file-btn" class="text-primary text-sm font-medium hover:text-primary/80 transition-colors">
+                                更换
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 表头识别和列映射区域 -->
+            <section id="mapping-section" class="mb-6 hidden">
+                <div id="mapping-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <div id="mapping-header" class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-semibold text-text-primary">列映射设置</h2>
+                        <div id="recognition-status" class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-success rounded-full"></div>
+                            <span class="text-sm text-success font-medium">识别完成</span>
+                        </div>
+                    </div>
+                    
+                    <!-- 表头识别结果 -->
+                    <div id="header-recognition" class="mb-6">
+                        <h3 class="text-sm font-medium text-text-primary mb-3">识别到的表头：</h3>
+                        <div id="recognized-headers" class="flex flex-wrap gap-2">
+                            <!-- 动态生成识别到的表头标签 -->
+                        </div>
+                    </div>
+                    
+                    <!-- 列映射表格 -->
+                    <div id="mapping-table" class="space-y-3">
+                        <div class="mapping-row flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                            <div class="flex-1">
+                                <div class="font-medium text-text-primary">姓名</div>
+                                <div class="text-sm text-text-secondary">联系人姓名</div>
+                            </div>
+                            <select id="mapping-name" class="w-32 px-3 py-2 border border-border-light rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mapping-row flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                            <div class="flex-1">
+                                <div class="font-medium text-text-primary">金额</div>
+                                <div class="text-sm text-text-secondary">礼金金额</div>
+                            </div>
+                            <select id="mapping-amount" class="w-32 px-3 py-2 border border-border-light rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mapping-row flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                            <div class="flex-1">
+                                <div class="font-medium text-text-primary">备注</div>
+                                <div class="text-sm text-text-secondary">附加说明</div>
+                            </div>
+                            <select id="mapping-note" class="w-32 px-3 py-2 border border-border-light rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mapping-row flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                            <div class="flex-1">
+                                <div class="font-medium text-text-primary">日期</div>
+                                <div class="text-sm text-text-secondary">记录日期</div>
+                            </div>
+                            <select id="mapping-date" class="w-32 px-3 py-2 border border-border-light rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                                <option value="">请选择</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 下一步按钮 -->
+            <section id="action-section" class="mb-6">
+                <button id="next-btn" class="w-full primary-gradient text-white py-4 rounded-3xl font-semibold text-lg shadow-primary-btn disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <i class="fas fa-arrow-right mr-2"></i>预览数据
+                </button>
+            </section>
+
+            <!-- 帮助提示 -->
+            <section id="help-section">
+                <div id="help-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <h3 class="text-lg font-semibold text-text-primary mb-4">
+                        <i class="fas fa-question-circle text-info mr-2"></i>使用说明
+                    </h3>
+                    <div class="space-y-3 text-sm text-text-secondary">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                            <p>请确保Excel文件第一行为表头，包含姓名、金额等必要信息</p>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                            <p>系统会自动识别表头，您可以手动调整列映射关系</p>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                            <p>金额列请使用数字格式，不要包含人民币符号</p>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-primary rounded-full mt-2 flex-shrink-0"></div>
+                            <p>日期格式建议使用 yyyy-mm-dd 或 yyyy年mm月dd日</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 加载遮罩 -->
+        <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-3xl p-8 mx-4 max-w-sm w-full text-center">
+                <div class="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full loading-spinner mx-auto mb-4"></div>
+                <h3 class="text-lg font-semibold text-text-primary mb-2">正在解析文件...</h3>
+                <p class="text-sm text-text-secondary">请稍候，正在识别表头信息</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取URL参数
+            function getUrlParams() {
+                const params = {};
+                const queryString = window.location.search.substring(1);
+                const urlParams = new URLSearchParams(queryString);
+                
+                for(const [key, value] of urlParams.entries()) {
+                    params[key] = value;
+                }
+                return params;
+            }
+
+            const params = getUrlParams();
+            const ledgerId = params.ledger_id || 'default_ledger';
+
+            // 模拟Excel表头识别结果
+            const mockHeaders = [
+                '姓名', '礼金金额', '备注', '日期', '关系', '联系方式'
+            ];
+
+            // 返回按钮点击事件
+            document.querySelector('#back-btn').addEventListener('click', function() {
+                window.history.back();
+            });
+
+            // 选择文件按钮点击事件
+            document.querySelector('#select-file-btn').addEventListener('click', function() {
+                console.log('需要调用第三方接口实现文件选择功能');
+                // 模拟文件选择成功
+                setTimeout(() => {
+                    simulateFileSelection();
+                }, 500);
+            });
+
+            // 更换文件按钮点击事件
+            document.querySelector('#change-file-btn').addEventListener('click', function() {
+                console.log('需要调用第三方接口实现文件选择功能');
+                // 模拟文件选择成功
+                setTimeout(() => {
+                    simulateFileSelection();
+                }, 500);
+            });
+
+            // 模拟文件选择成功
+            function simulateFileSelection() {
+                const fileName = '礼金记录.xlsx';
+                const fileSize = '25.6 KB';
+                
+                // 显示文件信息
+                document.querySelector('#file-name').textContent = fileName;
+                document.querySelector('#file-size').textContent = fileSize;
+                document.querySelector('#selected-file-info').classList.remove('hidden');
+                
+                // 显示加载状态
+                document.querySelector('#loading-overlay').classList.remove('hidden');
+                
+                // 模拟文件解析
+                setTimeout(() => {
+                    document.querySelector('#loading-overlay').classList.add('hidden');
+                    showMappingSection();
+                }, 2000);
+            }
+
+            // 显示列映射区域
+            function showMappingSection() {
+                document.querySelector('#mapping-section').classList.remove('hidden');
+                
+                // 显示识别到的表头
+                const headersContainer = document.querySelector('#recognized-headers');
+                headersContainer.innerHTML = '';
+                mockHeaders.forEach(header => {
+                    const tag = document.createElement('span');
+                    tag.className = 'px-3 py-1 bg-primary/10 text-primary text-sm rounded-full';
+                    tag.textContent = header;
+                    headersContainer.appendChild(tag);
+                });
+                
+                // 填充下拉菜单选项
+                const selectElements = ['mapping-name', 'mapping-amount', 'mapping-note', 'mapping-date'];
+                selectElements.forEach(selectId => {
+                    const select = document.querySelector(`#${selectId}`);
+                    select.innerHTML = '<option value="">请选择</option>';
+                    mockHeaders.forEach(header => {
+                        const option = document.createElement('option');
+                        option.value = header;
+                        option.textContent = header;
+                        select.appendChild(option);
+                    });
+                });
+                
+                // 自动映射相似字段
+                document.querySelector('#mapping-name').value = '姓名';
+                document.querySelector('#mapping-amount').value = '礼金金额';
+                document.querySelector('#mapping-note').value = '备注';
+                document.querySelector('#mapping-date').value = '日期';
+                
+                // 启用下一步按钮
+                updateNextButtonState();
+            }
+
+            // 更新下一步按钮状态
+            function updateNextButtonState() {
+                const nameMapping = document.querySelector('#mapping-name').value;
+                const amountMapping = document.querySelector('#mapping-amount').value;
+                const nextBtn = document.querySelector('#next-btn');
+                
+                if (nameMapping && amountMapping) {
+                    nextBtn.disabled = false;
+                } else {
+                    nextBtn.disabled = true;
+                }
+            }
+
+            // 监听映射选择变化
+            const mappingSelects = document.querySelectorAll('[id^="mapping-"]');
+            mappingSelects.forEach(select => {
+                select.addEventListener('change', function() {
+                    updateNextButtonState();
+                });
+            });
+
+            // 下一步按钮点击事件
+            document.querySelector('#next-btn').addEventListener('click', function() {
+                if (this.disabled) return;
+                
+                const columnMapping = {
+                    name: document.querySelector('#mapping-name').value,
+                    amount: document.querySelector('#mapping-amount').value,
+                    note: document.querySelector('#mapping-note').value,
+                    date: document.querySelector('#mapping-date').value
+                };
+                
+                // 跳转到Excel校对页，传递映射信息
+                const params = new URLSearchParams({
+                    ledger_id: ledgerId,
+                    column_mapping: JSON.stringify(columnMapping)
+                });
+                
+                window.location.href = `P-EXCEL_PROOFREAD.html?${params.toString()}`;
+            });
+
+            // 文件上传区域点击事件
+            document.querySelector('#file-upload-area').addEventListener('click', function() {
+                document.querySelector('#select-file-btn').click();
+            });
+        });
+    </script>
+</body>
+</html>

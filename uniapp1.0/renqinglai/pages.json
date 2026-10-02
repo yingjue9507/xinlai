@@ -1,0 +1,129 @@
+{
+	"pages": [
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "启动页"
+			}
+		},
+		{
+			"path": "pages/login/login",
+			"style": {
+				"navigationBarTitleText": "登录"
+			}
+		},
+		{
+			"path": "pages/home/home",
+			"style": {
+				"navigationBarTitleText": "首页",
+				"enablePullDownRefresh": true
+			}
+		},
+		{
+			"path": "pages/ledger/list",
+			"style": {
+				"navigationBarTitleText": "账本列表",
+				"enablePullDownRefresh": true
+			}
+		},
+		{
+			"path": "pages/ledger/create",
+			"style": {
+				"navigationBarTitleText": "创建账本"
+			}
+		},
+		{
+			"path": "pages/ledger/detail",
+			"style": {
+				"navigationBarTitleText": "账本详情"
+			}
+		},
+		{
+			"path": "pages/record/add",
+			"style": {
+				"navigationBarTitleText": "记一笔"
+			}
+		},
+		{
+			"path": "pages/contact/list",
+			"style": {
+				"navigationBarTitleText": "联系人",
+				"enablePullDownRefresh": true
+			}
+		},
+		{
+			"path": "pages/contact/detail",
+			"style": {
+				"navigationBarTitleText": "联系人详情"
+			}
+		},
+		{
+			"path": "pages/settings/settings",
+			"style": {
+				"navigationBarTitleText": "设置"
+			}
+		},
+		{
+			"path": "pages/export/export",
+			"style": {
+				"navigationBarTitleText": "数据导出"
+			}
+		},
+		{
+			"path": "pages/import/ocr",
+			"style": {
+				"navigationBarTitleText": "OCR识别"
+			}
+		},
+		{
+			"path": "pages/notify/mass",
+			"style": {
+				"navigationBarTitleText": "群发通知"
+			}
+		},
+		{
+			"path": "pages/notify/log",
+			"style": {
+				"navigationBarTitleText": "发送记录"
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "人情薄",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"tabBar": {
+		"color": "#7A7E83",
+		"selectedColor": "#3cc51f",
+		"borderStyle": "black",
+		"backgroundColor": "#ffffff",
+		"list": [
+			{
+				"pagePath": "pages/home/home",
+				"text": "首页",
+				"iconPath": "static/logo.png",
+				"selectedIconPath": "static/logo.png"
+			},
+			{
+				"pagePath": "pages/ledger/list",
+				"text": "账本",
+				"iconPath": "static/logo.png",
+				"selectedIconPath": "static/logo.png"
+			},
+			{
+				"pagePath": "pages/contact/list",
+				"text": "联系人",
+				"iconPath": "static/logo.png",
+				"selectedIconPath": "static/logo.png"
+			},
+			{
+				"pagePath": "pages/settings/settings",
+				"text": "设置",
+				"iconPath": "static/logo.png",
+				"selectedIconPath": "static/logo.png"
+			}
+		]
+	}
+}

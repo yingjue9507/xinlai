@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心来 - 数据导出</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#8B5CF6',
+                        tertiary: '#EC4899',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        info: '#06B6D4',
+                        'text-primary': '#1E293B',
+                        'text-secondary': '#64748B',
+                        'bg-primary': '#EEF2FF',
+                        'bg-secondary': '#F3E8FF',
+                        'card-bg': '#FFFFFF',
+                        'border-light': '#E2E8F0'
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        'primary-btn': '0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.2)'
+                    },
+                    borderRadius: {
+                        'xl': '0.75rem',
+                        '2xl': '1rem',
+                        '3xl': '1.5rem'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #EEF2FF 0%, #F3E8FF 100%);
+        }
+        
+        .primary-gradient {
+            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .primary-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .primary-gradient:hover::before {
+            opacity: 1;
+        }
+        
+        .status-bar {
+            background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+        }
+        
+        .cloud-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+        }
+        
+        .dynamic-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dynamic-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .safe-top {
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        .radio-option {
+            transition: all 0.3s ease;
+        }
+        
+        .radio-option.selected {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: #3B82F6;
+        }
+        
+        .radio-option:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="gradient-bg cloud-pattern min-h-screen">
+    <!-- iOS状态栏 -->
+    <div id="status-bar" class="status-bar text-white text-sm flex justify-between items-center px-4 py-1 safe-top">
+        <div class="flex items-center space-x-1">
+            <span class="font-medium">9:41</span>
+        </div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-xs"></i>
+            <i class="fas fa-wifi text-xs"></i>
+            <div class="w-6 h-3 border border-white rounded-sm">
+                <div class="w-4 h-1.5 bg-white rounded-sm m-0.5"></div>
+            </div>
+        </div>
+    </div>
+    <!-- 主容器 -->
+    <div id="main-container" class="max-w-sm mx-auto bg-white min-h-screen relative">
+        <!-- 顶部导航栏 -->
+        <header id="top-header" class="bg-white px-4 py-3 border-b border-border-light">
+            <div id="header-content" class="flex items-center">
+                <button id="back-btn" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition-all mr-3">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                </button>
+                <h1 class="text-lg font-bold text-text-primary">数据导出</h1>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main id="main-content" class="px-4 py-6">
+            <!-- 导出范围选择 -->
+            <section id="export-scope-section" class="mb-8">
+                <div id="scope-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <div id="scope-header" class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-gradient-to-br from-primary to-tertiary rounded-xl flex items-center justify-center shadow-md mr-4">
+                            <i class="fas fa-filter text-white text-base"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-semibold text-text-primary">导出范围</h2>
+                            <p class="text-sm text-text-secondary">选择要导出的数据范围</p>
+                        </div>
+                    </div>
+                    <div id="scope-options" class="space-y-3">
+                        <div id="scope-all-ledgers" class="radio-option p-4 border-2 border-border-light rounded-2xl cursor-pointer selected" data-scope="all-ledgers">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 border-2 border-primary rounded-full flex items-center justify-center">
+                                        <div class="w-3 h-3 bg-primary rounded-full"></div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-text-primary">所有礼簿</div>
+                                        <div class="text-sm text-text-secondary">导出所有礼簿的完整记录</div>
+                                    </div>
+                                </div>
+                                <i class="fas fa-book text-primary"></i>
+                            </div>
+                        </div>
+                        
+                        <div id="scope-specific-ledger" class="radio-option p-4 border-2 border-border-light rounded-2xl cursor-pointer" data-scope="specific-ledger">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                        <div class="w-3 h-3 bg-transparent rounded-full"></div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-text-primary">指定礼簿</div>
+                                        <div class="text-sm text-text-secondary">仅导出特定礼簿的记录</div>
+                                    </div>
+                                </div>
+                                <i class="fas fa-bookmark text-gray-400"></i>
+                            </div>
+                        </div>
+                        
+                        <div id="scope-all-contacts" class="radio-option p-4 border-2 border-border-light rounded-2xl cursor-pointer" data-scope="all-contacts">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                        <div class="w-3 h-3 bg-transparent rounded-full"></div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-text-primary">所有联系人</div>
+                                        <div class="text-sm text-text-secondary">导出联系人信息及统计数据</div>
+                                    </div>
+                                </div>
+                                <i class="fas fa-users text-gray-400"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 礼簿选择（当选择指定礼簿时显示） -->
+            <section id="ledger-selection-section" class="mb-8 hidden">
+                <div id="ledger-select-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <div id="ledger-select-header" class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-gradient-to-br from-info to-blue-500 rounded-xl flex items-center justify-center shadow-md mr-4">
+                            <i class="fas fa-list text-white text-base"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-semibold text-text-primary">选择礼簿</h2>
+                            <p class="text-sm text-text-secondary">选择要导出的礼簿</p>
+                        </div>
+                    </div>
+                    <div id="ledger-list" class="space-y-3">
+                        <div class="ledger-option p-4 border-2 border-border-light rounded-2xl cursor-pointer hover:bg-primary/5 transition-colors" data-ledger-id="ledger1">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                        <div class="w-3 h-3 bg-transparent rounded-full"></div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-text-primary">我的婚礼</div>
+                                        <div class="text-sm text-text-secondary">婚嫁 · 2023年10月1日</div>
+                                    </div>
+                                </div>
+                                <span class="text-sm text-text-secondary">156条记录</span>
+                            </div>
+                        </div>
+                        
+                        <div class="ledger-option p-4 border-2 border-border-light rounded-2xl cursor-pointer hover:bg-primary/5 transition-colors" data-ledger-id="ledger2">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                        <div class="w-3 h-3 bg-transparent rounded-full"></div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-text-primary">乔迁之喜</div>
+                                        <div class="text-sm text-text-secondary">乔迁 · 2023年8月15日</div>
+                                    </div>
+                                </div>
+                                <span class="text-sm text-text-secondary">89条记录</span>
+                            </div>
+                        </div>
+                        
+                        <div class="ledger-option p-4 border-2 border-border-light rounded-2xl cursor-pointer hover:bg-primary/5 transition-colors" data-ledger-id="ledger3">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                        <div class="w-3 h-3 bg-transparent rounded-full"></div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-text-primary">生日庆祝</div>
+                                        <div class="text-sm text-text-secondary">生日 · 2023年6月20日</div>
+                                    </div>
+                                </div>
+                                <span class="text-sm text-text-secondary">45条记录</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 导出格式选择 -->
+            <section id="export-format-section" class="mb-8">
+                <div id="format-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <div id="format-header" class="flex items-center mb-6">
+                        <div class="w-12 h-12 bg-gradient-to-br from-success to-green-500 rounded-xl flex items-center justify-center shadow-md mr-4">
+                            <i class="fas fa-file-excel text-white text-base"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-lg font-semibold text-text-primary">导出格式</h2>
+                            <p class="text-sm text-text-secondary">选择导出文件的格式</p>
+                        </div>
+                    </div>
+                    <div id="format-options" class="space-y-3">
+                        <div id="format-excel" class="radio-option p-4 border-2 border-primary rounded-2xl cursor-pointer selected" data-format="excel">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-6 h-6 border-2 border-primary rounded-full flex items-center justify-center">
+                                        <div class="w-3 h-3 bg-primary rounded-full"></div>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-text-primary">Excel (.xlsx)</div>
+                                        <div class="text-sm text-text-secondary">适用于Microsoft Excel、WPS等</div>
+                                    </div>
+                                </div>
+                                <i class="fas fa-file-excel text-success text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 生成并分享按钮 -->
+            <section id="action-section" class="mb-8">
+                <button id="generate-share-btn" class="w-full primary-gradient rounded-3xl shadow-primary-btn p-4 text-center dynamic-card group">
+                    <div id="btn-content" class="relative z-10 transition-transform group-hover:scale-105">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-download text-white text-xl"></i>
+                        </div>
+                        <div class="text-white text-lg font-bold mb-1">生成并分享</div>
+                        <div class="text-white text-sm opacity-90">生成Excel文件并分享</div>
+                    </div>
+                </button>
+            </section>
+
+            <!-- 导出说明 -->
+            <section id="export-info-section">
+                <div id="info-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <div id="info-header" class="flex items-center mb-4">
+                        <div class="w-10 h-10 bg-gradient-to-br from-secondary to-purple-500 rounded-xl flex items-center justify-center shadow-md mr-3">
+                            <i class="fas fa-info-circle text-white"></i>
+                        </div>
+                        <h2 class="text-lg font-semibold text-text-primary">导出说明</h2>
+                    </div>
+                    <div id="info-list" class="space-y-3 text-sm text-text-secondary">
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-success mt-0.5"></i>
+                            <span>导出文件将包含完整的记录信息，包括姓名、金额、备注等</span>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-success mt-0.5"></i>
+                            <span>支持通过微信、邮件、云盘等多种方式分享</span>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-success mt-0.5"></i>
+                            <span>导出的数据仅保存在您的设备中，保护隐私安全</span>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <i class="fas fa-check-circle text-success mt-0.5"></i>
+                            <span>建议定期导出备份，防止数据丢失</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- 加载遮罩 -->
+        <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-3xl p-8 mx-4 text-center">
+                <div class="w-16 h-16 border-4 border-primary border-t-transparent rounded-full loading-spinner mx-auto mb-4"></div>
+                <h3 class="text-lg font-semibold text-text-primary mb-2">正在生成文件</h3>
+                <p class="text-sm text-text-secondary">请稍候，正在为您生成Excel文件...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 返回按钮点击事件
+            document.querySelector('#back-btn').addEventListener('click', function() {
+                window.location.href = 'P-SETTINGS.html';
+            });
+
+            // 导出范围选择事件
+            const scopeOptions = document.querySelectorAll('.radio-option[data-scope]');
+            scopeOptions.forEach(function(option) {
+                option.addEventListener('click', function() {
+                    // 移除所有选中状态
+                    scopeOptions.forEach(opt => {
+                        opt.classList.remove('selected');
+                        const radio = opt.querySelector('.w-6.h-6 > div');
+                        const border = opt.querySelector('.w-6.h-6');
+                        radio.classList.remove('bg-primary');
+                        radio.classList.add('bg-transparent');
+                        border.classList.remove('border-primary');
+                        border.classList.add('border-gray-300');
+                    });
+
+                    // 添加当前选中状态
+                    this.classList.add('selected');
+                    const radio = this.querySelector('.w-6.h-6 > div');
+                    const border = this.querySelector('.w-6.h-6');
+                    radio.classList.remove('bg-transparent');
+                    radio.classList.add('bg-primary');
+                    border.classList.remove('border-gray-300');
+                    border.classList.add('border-primary');
+
+                    // 显示/隐藏礼簿选择
+                    const ledgerSection = document.querySelector('#ledger-selection-section');
+                    if (this.dataset.scope === 'specific-ledger') {
+                        ledgerSection.classList.remove('hidden');
+                    } else {
+                        ledgerSection.classList.add('hidden');
+                    }
+                });
+            });
+
+            // 礼簿选择事件
+            const ledgerOptions = document.querySelectorAll('.ledger-option');
+            let selectedLedger = null;
+            ledgerOptions.forEach(function(option) {
+                option.addEventListener('click', function() {
+                    // 移除所有选中状态
+                    ledgerOptions.forEach(opt => {
+                        const radio = opt.querySelector('.w-6.h-6 > div');
+                        const border = opt.querySelector('.w-6.h-6');
+                        radio.classList.remove('bg-primary');
+                        radio.classList.add('bg-transparent');
+                        border.classList.remove('border-primary');
+                        border.classList.add('border-gray-300');
+                    });
+
+                    // 添加当前选中状态
+                    const radio = this.querySelector('.w-6.h-6 > div');
+                    const border = this.querySelector('.w-6.h-6');
+                    radio.classList.remove('bg-transparent');
+                    radio.classList.add('bg-primary');
+                    border.classList.remove('border-gray-300');
+                    border.classList.add('border-primary');
+
+                    selectedLedger = this.dataset.ledgerId;
+                });
+            });
+
+            // 导出格式选择事件（当前只有Excel一种格式，暂时不需要处理）
+            const formatOptions = document.querySelectorAll('.radio-option[data-format]');
+            formatOptions.forEach(function(option) {
+                option.addEventListener('click', function() {
+                    // 移除所有选中状态
+                    formatOptions.forEach(opt => {
+                        opt.classList.remove('selected');
+                        const radio = opt.querySelector('.w-6.h-6 > div');
+                        const border = opt.querySelector('.w-6.h-6');
+                        radio.classList.remove('bg-primary');
+                        radio.classList.add('bg-transparent');
+                        border.classList.remove('border-primary');
+                        border.classList.add('border-gray-300');
+                    });
+
+                    // 添加当前选中状态
+                    this.classList.add('selected');
+                    const radio = this.querySelector('.w-6.h-6 > div');
+                    const border = this.querySelector('.w-6.h-6');
+                    radio.classList.remove('bg-transparent');
+                    radio.classList.add('bg-primary');
+                    border.classList.remove('border-gray-300');
+                    border.classList.add('border-primary');
+                });
+            });
+
+            // 生成并分享按钮点击事件
+            document.querySelector('#generate-share-btn').addEventListener('click', function() {
+                // 获取选择的导出范围
+                const selectedScope = document.querySelector('.radio-option[data-scope].selected').dataset.scope;
+                const selectedFormat = document.querySelector('.radio-option[data-format].selected').dataset.format;
+
+                // 验证选择
+                if (selectedScope === 'specific-ledger' && !selectedLedger) {
+                    alert('请选择要导出的礼簿');
+                    return;
+                }
+
+                // 显示加载遮罩
+                document.querySelector('#loading-overlay').classList.remove('hidden');
+
+                // 模拟文件生成过程
+                setTimeout(function() {
+                    // 隐藏加载遮罩
+                    document.querySelector('#loading-overlay').classList.add('hidden');
+                    
+                    // 模拟文件生成成功，调用系统分享功能
+                    console.log('需要调用第三方接口实现文件生成和分享功能');
+                    
+                    // 显示成功提示
+                    alert('文件生成成功！正在打开分享界面...');
+                    
+                    // 注释：在实际应用中，这里会生成真实的Excel文件并调用系统分享API
+                    // 由于这是原型阶段，我们只做UI展示和日志输出
+                }, 2000);
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心来 - 群发记录</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#8B5CF6',
+                        tertiary: '#EC4899',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        info: '#06B6D4',
+                        'text-primary': '#1E293B',
+                        'text-secondary': '#64748B',
+                        'bg-primary': '#EEF2FF',
+                        'bg-secondary': '#F3E8FF',
+                        'card-bg': '#FFFFFF',
+                        'border-light': '#E2E8F0'
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        'primary-btn': '0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.2)'
+                    },
+                    borderRadius: {
+                        'xl': '0.75rem',
+                        '2xl': '1rem',
+                        '3xl': '1.5rem'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #EEF2FF 0%, #F3E8FF 100%);
+        }
+        
+        .primary-gradient {
+            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .primary-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .primary-gradient:hover::before {
+            opacity: 1;
+        }
+        
+        .status-bar {
+            background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+        }
+        
+        .cloud-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+        }
+        
+        .dynamic-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dynamic-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .safe-top {
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .log-item {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .log-item:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+
+        .log-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .log-detail.expanded {
+            max-height: 200px;
+        }
+    </style>
+</head>
+<body class="gradient-bg cloud-pattern min-h-screen">
+    <!-- iOS状态栏 -->
+    <div id="status-bar" class="status-bar text-white text-sm flex justify-between items-center px-4 py-1 safe-top">
+        <div class="flex items-center space-x-1">
+            <span class="font-medium">9:41</span>
+        </div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-xs"></i>
+            <i class="fas fa-wifi text-xs"></i>
+            <div class="w-6 h-3 border border-white rounded-sm">
+                <div class="w-4 h-1.5 bg-white rounded-sm m-0.5"></div>
+            </div>
+        </div>
+    </div>
+    <!-- 主容器 -->
+    <div id="main-container" class="max-w-sm mx-auto bg-white min-h-screen relative">
+        <!-- 顶部导航栏 -->
+        <header id="top-header" class="bg-white px-4 py-3 border-b border-border-light">
+            <div id="header-content" class="flex items-center justify-between">
+                <div id="nav-left" class="flex items-center space-x-3">
+                    <button id="back-btn" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition-all">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h1 class="text-lg font-bold text-text-primary">群发记录</h1>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main id="main-content" class="px-4 py-6">
+            <!-- 群发记录列表 -->
+            <section id="send-log-section">
+                <div id="log-list" class="space-y-4">
+                    <!-- 记录项1 -->
+                    <div id="log-item-1" class="bg-white rounded-3xl shadow-card dynamic-card log-item" data-log-id="log_001">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-primary to-tertiary rounded-xl flex items-center justify-center shadow-md">
+                                        <i class="fas fa-heart text-white text-base"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-text-primary">婚礼通知</h3>
+                                        <p class="text-sm text-text-secondary">发送时间：2024-01-15 14:30</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-primary">25人</div>
+                                    <div class="text-xs text-success">发送成功</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm text-text-secondary line-clamp-2">诚邀您参加我和张三的婚礼，时间：2024年2月14日...</p>
+                                <button class="log-toggle text-primary text-sm font-medium hover:text-primary/80 transition-colors">
+                                    查看详情
+                                </button>
+                            </div>
+                        </div>
+                        <!-- 详情展开区域 -->
+                        <div class="log-detail px-6 pb-6">
+                            <div class="bg-gray-50 rounded-2xl p-4">
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="text-sm font-medium text-text-secondary">发送内容：</label>
+                                        <p class="text-sm text-text-primary mt-1">亲爱的[姓名]，诚邀您参加我和张三的婚礼，时间：2024年2月14日上午10点，地点：北京四季酒店。期待您的光临！</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-text-secondary">接收人：</label>
+                                        <p class="text-sm text-text-primary mt-1">李四、王五、赵六、孙七、周八、吴九、郑十...</p>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-text-secondary">
+                                        <span>发送时间：2024-01-15 14:30:25</span>
+                                        <span>耗时：2.3秒</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 记录项2 -->
+                    <div id="log-item-2" class="bg-white rounded-3xl shadow-card dynamic-card log-item" data-log-id="log_002">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-success to-green-500 rounded-xl flex items-center justify-center shadow-md">
+                                        <i class="fas fa-birthday-cake text-white text-base"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-text-primary">生日庆祝</h3>
+                                        <p class="text-sm text-text-secondary">发送时间：2024-01-10 10:15</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-primary">18人</div>
+                                    <div class="text-xs text-success">发送成功</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm text-text-secondary line-clamp-2">邀请您参加我的生日聚会，时间：本周五晚上7点...</p>
+                                <button class="log-toggle text-primary text-sm font-medium hover:text-primary/80 transition-colors">
+                                    查看详情
+                                </button>
+                            </div>
+                        </div>
+                        <!-- 详情展开区域 -->
+                        <div class="log-detail px-6 pb-6">
+                            <div class="bg-gray-50 rounded-2xl p-4">
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="text-sm font-medium text-text-secondary">发送内容：</label>
+                                        <p class="text-sm text-text-primary mt-1">亲爱的[姓名]，邀请您参加我的生日聚会，时间：本周五晚上7点，地点：海底捞火锅店。不见不散！</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-text-secondary">接收人：</label>
+                                        <p class="text-sm text-text-primary mt-1">张三、李四、王五、赵六、孙七、周八...</p>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-text-secondary">
+                                        <span>发送时间：2024-01-10 10:15:30</span>
+                                        <span>耗时：1.8秒</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 记录项3 -->
+                    <div id="log-item-3" class="bg-white rounded-3xl shadow-card dynamic-card log-item" data-log-id="log_003">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-secondary to-purple-500 rounded-xl flex items-center justify-center shadow-md">
+                                        <i class="fas fa-home text-white text-base"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-text-primary">乔迁之喜</h3>
+                                        <p class="text-sm text-text-secondary">发送时间：2024-01-05 16:45</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-primary">32人</div>
+                                    <div class="text-xs text-success">发送成功</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm text-text-secondary line-clamp-2">新居入伙，诚邀您前来做客，时间：本周日下午...</p>
+                                <button class="log-toggle text-primary text-sm font-medium hover:text-primary/80 transition-colors">
+                                    查看详情
+                                </button>
+                            </div>
+                        </div>
+                        <!-- 详情展开区域 -->
+                        <div class="log-detail px-6 pb-6">
+                            <div class="bg-gray-50 rounded-2xl p-4">
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="text-sm font-medium text-text-secondary">发送内容：</label>
+                                        <p class="text-sm text-text-primary mt-1">亲爱的[姓名]，新居入伙，诚邀您前来做客，时间：本周日下午2点，地点：阳光花园3号楼2单元501。欢迎光临！</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-text-secondary">接收人：</label>
+                                        <p class="text-sm text-text-primary mt-1">张三、李四、王五、赵六、孙七、周八、吴九、郑十...</p>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-text-secondary">
+                                        <span>发送时间：2024-01-05 16:45:12</span>
+                                        <span>耗时：3.1秒</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 记录项4 -->
+                    <div id="log-item-4" class="bg-white rounded-3xl shadow-card dynamic-card log-item" data-log-id="log_004">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-tertiary to-pink-500 rounded-xl flex items-center justify-center shadow-md">
+                                        <i class="fas fa-baby text-white text-base"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-text-primary">喜得贵子</h3>
+                                        <p class="text-sm text-text-secondary">发送时间：2023-12-28 09:20</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-primary">45人</div>
+                                    <div class="text-xs text-success">发送成功</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm text-text-secondary line-clamp-2">喜得贵子，感谢大家的关心，特设薄宴...</p>
+                                <button class="log-toggle text-primary text-sm font-medium hover:text-primary/80 transition-colors">
+                                    查看详情
+                                </button>
+                            </div>
+                        </div>
+                        <!-- 详情展开区域 -->
+                        <div class="log-detail px-6 pb-6">
+                            <div class="bg-gray-50 rounded-2xl p-4">
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="text-sm font-medium text-text-secondary">发送内容：</label>
+                                        <p class="text-sm text-text-primary mt-1">亲爱的[姓名]，喜得贵子，感谢大家的关心，特设薄宴，时间：2024年1月8日中午12点，地点：全聚德烤鸭店。</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-text-secondary">接收人：</label>
+                                        <p class="text-sm text-text-primary mt-1">张三、李四、王五、赵六、孙七、周八、吴九、郑十、钱十一、孙十二...</p>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-text-secondary">
+                                        <span>发送时间：2023-12-28 09:20:45</span>
+                                        <span>耗时：4.2秒</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 记录项5 -->
+                    <div id="log-item-5" class="bg-white rounded-3xl shadow-card dynamic-card log-item" data-log-id="log_005">
+                        <div class="p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-info to-blue-500 rounded-xl flex items-center justify-center shadow-md">
+                                        <i class="fas fa-gift text-white text-base"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="font-semibold text-text-primary">公司年会</h3>
+                                        <p class="text-sm text-text-secondary">发送时间：2023-12-20 15:30</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-lg font-bold text-primary">120人</div>
+                                    <div class="text-xs text-danger">部分失败</div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <p class="text-sm text-text-secondary line-clamp-2">公司年会通知，时间：12月31日晚上6点...</p>
+                                <button class="log-toggle text-primary text-sm font-medium hover:text-primary/80 transition-colors">
+                                    查看详情
+                                </button>
+                            </div>
+                        </div>
+                        <!-- 详情展开区域 -->
+                        <div class="log-detail px-6 pb-6">
+                            <div class="bg-gray-50 rounded-2xl p-4">
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="text-sm font-medium text-text-secondary">发送内容：</label>
+                                        <p class="text-sm text-text-primary mt-1">各位同事，公司年会通知，时间：12月31日晚上6点，地点：国际会议中心。请准时参加！</p>
+                                    </div>
+                                    <div>
+                                        <label class="text-sm font-medium text-text-secondary">发送结果：</label>
+                                        <p class="text-sm text-text-primary mt-1">成功：118人，失败：2人（号码不存在）</p>
+                                    </div>
+                                    <div class="flex justify-between text-xs text-text-secondary">
+                                        <span>发送时间：2023-12-20 15:30:18</span>
+                                        <span>耗时：8.5秒</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 空状态 -->
+                <div id="empty-state" class="hidden text-center py-16">
+                    <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-inbox text-gray-400 text-2xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-text-primary mb-2">暂无群发记录</h3>
+                    <p class="text-text-secondary">您还没有发送过任何通知</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 返回按钮点击事件
+            document.querySelector('#back-btn').addEventListener('click', function() {
+                window.location.href = 'P-NOTIFY_MASS.html';
+            });
+
+            // 记录项展开/收起功能
+            const logItems = document.querySelectorAll('.log-item');
+            logItems.forEach(function(item) {
+                const toggleBtn = item.querySelector('.log-toggle');
+                const detailDiv = item.querySelector('.log-detail');
+                
+                toggleBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    if (detailDiv.classList.contains('expanded')) {
+                        // 收起
+                        detailDiv.classList.remove('expanded');
+                        toggleBtn.textContent = '查看详情';
+                    } else {
+                        // 先收起所有已展开的记录
+                        document.querySelectorAll('.log-detail.expanded').forEach(function(expandedDetail) {
+                            expandedDetail.classList.remove('expanded');
+                            expandedDetail.parentElement.querySelector('.log-toggle').textContent = '查看详情';
+                        });
+                        
+                        // 展开当前记录
+                        detailDiv.classList.add('expanded');
+                        toggleBtn.textContent = '收起详情';
+                    }
+                });
+
+                // 点击记录项也可以展开/收起
+                item.addEventListener('click', function() {
+                    if (detailDiv.classList.contains('expanded')) {
+                        detailDiv.classList.remove('expanded');
+                        toggleBtn.textContent = '查看详情';
+                    } else {
+                        // 先收起所有已展开的记录
+                        document.querySelectorAll('.log-detail.expanded').forEach(function(expandedDetail) {
+                            expandedDetail.classList.remove('expanded');
+                            expandedDetail.parentElement.querySelector('.log-toggle').textContent = '查看详情';
+                        });
+                        
+                        // 展开当前记录
+                        detailDiv.classList.add('expanded');
+                        toggleBtn.textContent = '收起详情';
+                    }
+                });
+            });
+
+            // 模拟数据加载
+            function loadSendLogs() {
+                // 这里可以添加实际的数据加载逻辑
+                // 在实际应用中，这里会调用API获取群发记录数据
+                console.log('加载群发记录数据');
+            }
+
+            // 页面加载时执行
+            loadSendLogs();
+        });
+    </script>
+</body>
+</html>

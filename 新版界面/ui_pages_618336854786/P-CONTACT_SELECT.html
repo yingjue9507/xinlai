@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心来 - 选择联系人</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#8B5CF6',
+                        tertiary: '#EC4899',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        info: '#06B6D4',
+                        'text-primary': '#1E293B',
+                        'text-secondary': '#64748B',
+                        'bg-primary': '#EEF2FF',
+                        'bg-secondary': '#F3E8FF',
+                        'card-bg': '#FFFFFF',
+                        'border-light': '#E2E8F0'
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        'primary-btn': '0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.2)'
+                    },
+                    borderRadius: {
+                        'xl': '0.75rem',
+                        '2xl': '1rem',
+                        '3xl': '1.5rem'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #EEF2FF 0%, #F3E8FF 100%);
+        }
+        
+        .primary-gradient {
+            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .primary-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .primary-gradient:hover::before {
+            opacity: 1;
+        }
+        
+        .status-bar {
+            background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+        }
+        
+        .cloud-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+        }
+        
+        .dynamic-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dynamic-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .safe-top {
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        .contact-item {
+            transition: all 0.2s ease;
+        }
+        
+        .contact-item:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        .contact-item.selected {
+            background-color: rgba(59, 130, 246, 0.1);
+            border-color: #3B82F6;
+        }
+        
+        .checkbox-custom {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #E2E8F0;
+            border-radius: 4px;
+            background-color: white;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .checkbox-custom:checked {
+            background-color: #3B82F6;
+            border-color: #3B82F6;
+        }
+        
+        .checkbox-custom:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .filter-tab {
+            transition: all 0.2s ease;
+        }
+        
+        .filter-tab.active {
+            background-color: #3B82F6;
+            color: white;
+        }
+        
+        .filter-tab:not(.active) {
+            background-color: #F8FAFC;
+            color: #64748B;
+        }
+    </style>
+</head>
+<body class="gradient-bg cloud-pattern min-h-screen">
+    <!-- iOS状态栏 -->
+    <div id="status-bar" class="status-bar text-white text-sm flex justify-between items-center px-4 py-1 safe-top">
+        <div class="flex items-center space-x-1">
+            <span class="font-medium">9:41</span>
+        </div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-xs"></i>
+            <i class="fas fa-wifi text-xs"></i>
+            <div class="w-6 h-3 border border-white rounded-sm">
+                <div class="w-4 h-1.5 bg-white rounded-sm m-0.5"></div>
+            </div>
+        </div>
+    </div>
+    <!-- 主容器 -->
+    <div id="main-container" class="max-w-sm mx-auto bg-white min-h-screen">
+        <!-- 顶部导航栏 -->
+        <header id="top-header" class="bg-white px-4 py-3 border-b border-border-light">
+            <div id="header-content" class="flex items-center justify-between">
+                <button id="back-btn" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition-all">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                </button>
+                <h1 class="text-lg font-bold text-text-primary">选择联系人</h1>
+                <button id="confirm-btn" class="px-4 py-2 bg-gray-100 text-gray-400 rounded-xl font-medium transition-all disabled:opacity-50" disabled>
+                    确定(<span id="selected-count">0</span>)
+                </button>
+            </div>
+        </header>
+
+        <!-- 搜索框 -->
+        <div id="search-section" class="px-4 py-4 bg-white border-b border-border-light">
+            <div class="relative">
+                <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="搜索联系人姓名或手机号" 
+                    class="w-full pl-12 pr-4 py-3 bg-gray-50 border border-transparent rounded-2xl search-input text-text-primary placeholder-gray-400"
+                >
+            </div>
+        </div>
+
+        <!-- 分组筛选器 -->
+        <div id="filter-section" class="px-4 py-3 bg-white border-b border-border-light">
+            <div class="flex space-x-3 overflow-x-auto scrollbar-hide">
+                <button id="filter-all" class="filter-tab active px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap">
+                    全部
+                </button>
+                <button id="filter-family" class="filter-tab px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap">
+                    家人
+                </button>
+                <button id="filter-friends" class="filter-tab px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap">
+                    朋友
+                </button>
+                <button id="filter-colleagues" class="filter-tab px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap">
+                    同事
+                </button>
+                <button id="filter-classmates" class="filter-tab px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap">
+                    同学
+                </button>
+            </div>
+        </div>
+
+        <!-- 联系人列表 -->
+        <main id="main-content" class="px-4 py-4">
+            <div id="contact-list" class="space-y-3">
+                <!-- 联系人项将通过JavaScript动态生成 -->
+            </div>
+            
+            <!-- 空状态 -->
+            <div id="empty-state" class="hidden text-center py-12">
+                <div class="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-users text-gray-400 text-2xl"></i>
+                </div>
+                <h3 class="text-lg font-medium text-text-primary mb-2">暂无联系人</h3>
+                <p class="text-text-secondary text-sm">请先授予通讯录权限</p>
+            </div>
+            
+            <!-- 加载状态 -->
+            <div id="loading-state" class="text-center py-12">
+                <div class="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p class="text-text-secondary text-sm">加载中...</p>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 模拟通讯录数据
+            const mockContacts = [
+                { id: 1, name: '张三', phone: '138****8888', group: '家人' },
+                { id: 2, name: '李四', phone: '139****6666', group: '朋友' },
+                { id: 3, name: '王五', phone: '136****9999', group: '同事' },
+                { id: 4, name: '赵六', phone: '137****7777', group: '同学' },
+                { id: 5, name: '孙七', phone: '135****5555', group: '家人' },
+                { id: 6, name: '周八', phone: '134****4444', group: '朋友' },
+                { id: 7, name: '吴九', phone: '133****3333', group: '同事' },
+                { id: 8, name: '郑十', phone: '132****2222', group: '同学' },
+                { id: 9, name: '钱十一', phone: '131****1111', group: '家人' },
+                { id: 10, name: '孙十二', phone: '130****0000', group: '朋友' },
+                { id: 11, name: '李十三', phone: '189****1234', group: '同事' },
+                { id: 12, name: '王十四', phone: '188****5678', group: '同学' },
+                { id: 13, name: '赵十五', phone: '187****9012', group: '家人' },
+                { id: 14, name: '周十六', phone: '186****3456', group: '朋友' },
+                { id: 15, name: '吴十七', phone: '185****7890', group: '同事' }
+            ];
+
+            let selectedContacts = [];
+            let currentFilter = 'all';
+            let searchQuery = '';
+
+            // 渲染联系人列表
+            function renderContacts() {
+                const contactList = document.querySelector('#contact-list');
+                const loadingState = document.querySelector('#loading-state');
+                const emptyState = document.querySelector('#empty-state');
+
+                // 隐藏加载状态
+                loadingState.classList.add('hidden');
+
+                // 筛选联系人
+                let filteredContacts = mockContacts;
+                
+                // 按分组筛选
+                if (currentFilter !== 'all') {
+                    filteredContacts = filteredContacts.filter(contact => contact.group === currentFilter);
+                }
+                
+                // 按搜索词筛选
+                if (searchQuery) {
+                    const query = searchQuery.toLowerCase();
+                    filteredContacts = filteredContacts.filter(contact => 
+                        contact.name.toLowerCase().includes(query) || 
+                        contact.phone.toLowerCase().includes(query)
+                    );
+                }
+
+                if (filteredContacts.length === 0) {
+                    emptyState.classList.remove('hidden');
+                    contactList.innerHTML = '';
+                    return;
+                }
+
+                emptyState.classList.add('hidden');
+                
+                contactList.innerHTML = filteredContacts.map(contact => {
+                    const isSelected = selectedContacts.some(c => c.id === contact.id);
+                    return `
+                        <div class="contact-item ${isSelected ? 'selected' : ''} border border-gray-200 rounded-2xl p-4 cursor-pointer" data-contact-id="${contact.id}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <div class="w-12 h-12 bg-gradient-to-br from-primary to-tertiary rounded-xl flex items-center justify-center shadow-md">
+                                        <span class="text-white font-bold text-lg">${contact.name.charAt(0)}</span>
+                                    </div>
+                                    <div>
+                                        <div class="font-medium text-text-primary">${contact.name}</div>
+                                        <div class="text-sm text-text-secondary">${contact.phone}</div>
+                                    </div>
+                                </div>
+                                <input type="checkbox" class="checkbox-custom" ${isSelected ? 'checked' : ''} data-contact-id="${contact.id}">
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // 绑定联系人项点击事件
+                bindContactEvents();
+            }
+
+            // 绑定联系人项事件
+            function bindContactEvents() {
+                const contactItems = document.querySelectorAll('.contact-item');
+                const checkboxes = document.querySelectorAll('.checkbox-custom');
+
+                contactItems.forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        // 如果点击的是复选框，不处理（由复选框事件处理）
+                        if (e.target.classList.contains('checkbox-custom')) {
+                            return;
+                        }
+                        
+                        const contactId = parseInt(this.dataset.contactId);
+                        toggleContactSelection(contactId);
+                    });
+                });
+
+                checkboxes.forEach(checkbox => {
+                    checkbox.addEventListener('change', function() {
+                        const contactId = parseInt(this.dataset.contactId);
+                        if (this.checked) {
+                            selectContact(contactId);
+                        } else {
+                            deselectContact(contactId);
+                        }
+                    });
+                });
+            }
+
+            // 切换联系人选择状态
+            function toggleContactSelection(contactId) {
+                const contact = mockContacts.find(c => c.id === contactId);
+                if (!contact) return;
+
+                const isSelected = selectedContacts.some(c => c.id === contactId);
+                if (isSelected) {
+                    deselectContact(contactId);
+                } else {
+                    selectContact(contactId);
+                }
+            }
+
+            // 选择联系人
+            function selectContact(contactId) {
+                const contact = mockContacts.find(c => c.id === contactId);
+                if (!contact || selectedContacts.some(c => c.id === contactId)) return;
+
+                selectedContacts.push(contact);
+                updateContactSelection(contactId, true);
+                updateConfirmButton();
+            }
+
+            // 取消选择联系人
+            function deselectContact(contactId) {
+                selectedContacts = selectedContacts.filter(c => c.id !== contactId);
+                updateContactSelection(contactId, false);
+                updateConfirmButton();
+            }
+
+            // 更新联系人选择状态
+            function updateContactSelection(contactId, isSelected) {
+                const contactItem = document.querySelector(`[data-contact-id="${contactId}"]`);
+                const checkbox = document.querySelector(`.checkbox-custom[data-contact-id="${contactId}"]`);
+                
+                if (contactItem) {
+                    if (isSelected) {
+                        contactItem.classList.add('selected');
+                    } else {
+                        contactItem.classList.remove('selected');
+                    }
+                }
+                
+                if (checkbox) {
+                    checkbox.checked = isSelected;
+                }
+            }
+
+            // 更新确定按钮状态
+            function updateConfirmButton() {
+                const confirmBtn = document.querySelector('#confirm-btn');
+                const selectedCountSpan = document.querySelector('#selected-count');
+                
+                selectedCountSpan.textContent = selectedContacts.length;
+                
+                if (selectedContacts.length > 0) {
+                    confirmBtn.disabled = false;
+                    confirmBtn.classList.remove('bg-gray-100', 'text-gray-400');
+                    confirmBtn.classList.add('primary-gradient', 'text-white', 'shadow-primary-btn');
+                } else {
+                    confirmBtn.disabled = true;
+                    confirmBtn.classList.add('bg-gray-100', 'text-gray-400');
+                    confirmBtn.classList.remove('primary-gradient', 'text-white', 'shadow-primary-btn');
+                }
+            }
+
+            // 搜索功能
+            function handleSearch() {
+                const searchInput = document.querySelector('#search-input');
+                searchQuery = searchInput.value.trim();
+                renderContacts();
+            }
+
+            // 分组筛选功能
+            function handleFilter(filter) {
+                currentFilter = filter;
+                
+                // 更新筛选按钮状态
+                const filterButtons = document.querySelectorAll('.filter-tab');
+                filterButtons.forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                const activeButton = document.querySelector(`#filter-${filter}`);
+                if (activeButton) {
+                    activeButton.classList.add('active');
+                }
+                
+                renderContacts();
+            }
+
+            // 页面加载完成后渲染联系人
+            setTimeout(() => {
+                renderContacts();
+            }, 1000); // 模拟加载延迟
+
+            // 绑定事件监听器
+            document.querySelector('#back-btn').addEventListener('click', function() {
+                window.location.href = 'P-NOTIFY_MASS.html';
+            });
+
+            document.querySelector('#confirm-btn').addEventListener('click', function() {
+                if (selectedContacts.length > 0) {
+                    // 将选中的联系人传递给通知群发页
+                    const selectedContactsJson = JSON.stringify(selectedContacts);
+                    localStorage.setItem('selectedContacts', selectedContactsJson);
+                    window.location.href = 'P-NOTIFY_MASS.html';
+                }
+            });
+
+            document.querySelector('#search-input').addEventListener('input', handleSearch);
+
+            // 分组筛选按钮事件
+            document.querySelector('#filter-all').addEventListener('click', () => handleFilter('all'));
+            document.querySelector('#filter-family').addEventListener('click', () => handleFilter('家人'));
+            document.querySelector('#filter-friends').addEventListener('click', () => handleFilter('朋友'));
+            document.querySelector('#filter-colleagues').addEventListener('click', () => handleFilter('同事'));
+            document.querySelector('#filter-classmates').addEventListener('click', () => handleFilter('同学'));
+        });
+    </script>
+</body>
+</html>

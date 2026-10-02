@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>礼簿信息显示测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .test-link:hover {
+            background: #0056b3;
+        }
+        .feature-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 5px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .feature-list li:before {
+            content: "✅ ";
+            color: green;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>礼簿信息显示功能测试</h1>
+    
+    <div class="test-section">
+        <h2>新增功能特性</h2>
+        <ul class="feature-list">
+            <li>在添加记录页面顶部显示当前礼簿信息</li>
+            <li>根据记录类型自动选择合适的礼簿</li>
+            <li>实时更新礼簿名称和类型显示</li>
+            <li>不同礼簿类型使用不同的颜色标识</li>
+            <li>提供友好的提示信息</li>
+            <li>支持预设礼簿ID的自动加载</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>测试场景</h2>
+        
+        <h3>1. 无礼簿ID场景</h3>
+        <a href="P-ADD_RECORD.html" class="test-link" target="_blank">
+            测试无礼簿ID的礼簿信息显示
+        </a>
+        <p><small>应该显示"请先选择记录类型"，选择类型后自动匹配礼簿</small></p>
+        
+        <h3>2. 有礼簿ID场景</h3>
+        <a href="P-ADD_RECORD.html?ledger_id=test-ledger-id" class="test-link" target="_blank">
+            测试有礼簿ID的礼簿信息显示
+        </a>
+        <p><small>应该显示指定礼簿的信息，并自动选择对应的记录类型</small></p>
+        
+        <h3>3. 记录类型切换测试</h3>
+        <p>在添加记录页面：</p>
+        <ul>
+            <li>选择"收到"类型 → 应该显示"我办事"类型的礼簿（绿色标识）</li>
+            <li>选择"送出"类型 → 应该显示"参加别人的事"类型的礼簿（橙色标识）</li>
+            <li>如果没有匹配类型的礼簿 → 应该显示第一个礼簿并给出提示</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>界面元素说明</h2>
+        <ul>
+            <li><strong>礼簿图标</strong>：蓝色书本图标表示礼簿信息区域</li>
+            <li><strong>礼簿名称</strong>：大号字体显示当前选中的礼簿名称</li>
+            <li><strong>类型标识</strong>：圆形徽章显示礼簿类型（我办事/参加别人的事）</li>
+            <li><strong>提示信息</strong>：小字提示当前状态或操作建议</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>颜色标识</h2>
+        <ul>
+            <li><span style="color: green;">绿色</span>：我办事类型礼簿</li>
+            <li><span style="color: orange;">橙色</span>：参加别人的事类型礼簿</li>
+            <li><span style="color: blue;">蓝色</span>：默认状态或等待选择</li>
+            <li><span style="color: gray;">灰色</span>：无数据或错误状态</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>调试信息</h2>
+        <p>打开浏览器开发者工具的控制台，可以看到：</p>
+        <ul>
+            <li>礼簿信息加载过程</li>
+            <li>记录类型选择事件</li>
+            <li>礼簿匹配逻辑执行</li>
+            <li>API请求和响应详情</li>
+        </ul>
+    </div>
+</body>
+</html>

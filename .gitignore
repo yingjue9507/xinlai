@@ -1,0 +1,42 @@
+# Dependencies and generated build output
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+build/
+**/build/
+.gradle/
+**/.gradle/
+unpackage/
+**/unpackage/
+gradle-9.2.1/
+download-APP_GENERATION/app_618336854786/
+
+# Local configuration, secrets and machine-specific Android settings
+.env
+**/.env
+.env.*
+**/.env.*
+!.env.example
+!**/.env.example
+android/local.properties
+
+# Local databases and runtime files
+**/prisma/*.db
+**/prisma/*.db-journal
+*.sqlite
+*.sqlite3
+
+# Release/debug artifacts and temporary exports
+*.apk
+*.aab
+*.log
+*.tmp
+*.bak
+
+# Editor and OS files
+.vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db

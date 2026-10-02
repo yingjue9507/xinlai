@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心来 - 通知群发</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#8B5CF6',
+                        tertiary: '#EC4899',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        info: '#06B6D4',
+                        'text-primary': '#1E293B',
+                        'text-secondary': '#64748B',
+                        'bg-primary': '#EEF2FF',
+                        'bg-secondary': '#F3E8FF',
+                        'card-bg': '#FFFFFF',
+                        'border-light': '#E2E8F0'
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        'primary-btn': '0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.2)'
+                    },
+                    borderRadius: {
+                        'xl': '0.75rem',
+                        '2xl': '1rem',
+                        '3xl': '1.5rem'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #EEF2FF 0%, #F3E8FF 100%);
+        }
+        
+        .primary-gradient {
+            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .primary-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .primary-gradient:hover::before {
+            opacity: 1;
+        }
+        
+        .secondary-gradient {
+            background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+        }
+        
+        .status-bar {
+            background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+        }
+        
+        .cloud-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+        }
+        
+        .dynamic-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dynamic-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .safe-top {
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        .template-tab {
+            transition: all 0.3s ease;
+        }
+        
+        .template-tab.active {
+            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.3);
+        }
+        
+        .template-tab:not(.active) {
+            background: #F8FAFC;
+            color: #64748B;
+        }
+        
+        .template-tab:not(.active):hover {
+            background: #F1F5F9;
+        }
+        
+        .variable-chip {
+            background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .variable-chip:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+        
+        .sms-preview {
+            background: #F8FAFC;
+            border: 1px solid #E2E8F0;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            position: relative;
+        }
+        
+        .sms-preview::before {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 2rem;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid #F8FAFC;
+        }
+        
+        .sms-preview::after {
+            content: '';
+            position: absolute;
+            top: -9px;
+            left: 2rem;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid #E2E8F0;
+        }
+    </style>
+</head>
+<body class="gradient-bg cloud-pattern min-h-screen">
+    <!-- iOS状态栏 -->
+    <div id="status-bar" class="status-bar text-white text-sm flex justify-between items-center px-4 py-1 safe-top">
+        <div class="flex items-center space-x-1">
+            <span class="font-medium">9:41</span>
+        </div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-xs"></i>
+            <i class="fas fa-wifi text-xs"></i>
+            <div class="w-6 h-3 border border-white rounded-sm">
+                <div class="w-4 h-1.5 bg-white rounded-sm m-0.5"></div>
+            </div>
+        </div>
+    </div>
+    <!-- 主容器 -->
+    <div id="main-container" class="max-w-sm mx-auto bg-white min-h-screen relative">
+        <!-- 顶部导航栏 -->
+        <header id="top-header" class="bg-white px-4 py-3 border-b border-border-light">
+            <div id="header-content" class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button id="back-btn" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition-all">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h1 class="text-lg font-bold text-text-primary">通知群发</h1>
+                </div>
+                <button id="send-log-btn" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition-all">
+                    <i class="fas fa-history text-gray-600"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main id="main-content" class="px-4 py-6 pb-24">
+            <!-- 模板选择 -->
+            <section id="template-section" class="mb-6">
+                <div id="template-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <h2 class="text-lg font-semibold text-text-primary mb-4">选择模板</h2>
+                    <div id="template-tabs" class="flex space-x-3 mb-6">
+                        <button id="tab-happy" class="template-tab active flex-1 py-3 px-4 rounded-2xl text-center font-medium">
+                            <i class="fas fa-heart mr-2"></i>喜事模板
+                        </button>
+                        <button id="tab-sad" class="template-tab flex-1 py-3 px-4 rounded-2xl text-center font-medium">
+                            <i class="fas fa-mourning mr-2"></i>白事模板
+                        </button>
+                    </div>
+                    
+                    <!-- 变量选择 -->
+                    <div id="variables-section" class="mb-4">
+                        <h3 class="text-sm font-medium text-text-secondary mb-3">快捷变量</h3>
+                        <div id="variables-container" class="flex flex-wrap gap-2">
+                            <span class="variable-chip" data-variable="[姓名]">
+                                <i class="fas fa-user mr-1"></i>[姓名]
+                            </span>
+                            <span class="variable-chip" data-variable="[时间]">
+                                <i class="fas fa-clock mr-1"></i>[时间]
+                            </span>
+                            <span class="variable-chip" data-variable="[地点]">
+                                <i class="fas fa-map-marker-alt mr-1"></i>[地点]
+                            </span>
+                            <span class="variable-chip" data-variable="[事由]">
+                                <i class="fas fa-calendar-alt mr-1"></i>[事由]
+                            </span>
+                            <span class="variable-chip" data-variable="[联系人]">
+                                <i class="fas fa-phone mr-1"></i>[联系人]
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 短信内容编辑 -->
+            <section id="content-section" class="mb-6">
+                <div id="content-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <h2 class="text-lg font-semibold text-text-primary mb-4">短信内容</h2>
+                    <div id="sms-editor" class="space-y-4">
+                        <textarea 
+                            id="sms-content" 
+                            class="w-full h-32 p-4 border border-border-light rounded-2xl resize-none focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                            placeholder="请输入短信内容..."
+                        >亲爱的[姓名]，您好！我将于[时间]在[地点]举行[事由]，诚邀您拨冗出席，共同分享这份喜悦。期待您的光临！联系人：[联系人]</textarea>
+                        
+                        <!-- 短信预览 -->
+                        <div id="preview-section">
+                            <h3 class="text-sm font-medium text-text-secondary mb-3">预览效果</h3>
+                            <div class="sms-preview">
+                                <div id="sms-preview-content" class="text-text-primary">
+                                    亲爱的张三，您好！我将于2024年1月15日在XX酒店举行婚礼，诚邀您拨冗出席，共同分享这份喜悦。期待您的光临！联系人：李四
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 联系人选择 -->
+            <section id="contact-section" class="mb-6">
+                <div id="contact-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <h2 class="text-lg font-semibold text-text-primary mb-4">选择联系人</h2>
+                    <button id="select-contacts-btn" class="w-full bg-gray-50 hover:bg-gray-100 text-text-primary py-4 px-6 rounded-2xl font-medium transition-all flex items-center justify-center space-x-3">
+                        <i class="fas fa-users text-xl"></i>
+                        <span>选择联系人</span>
+                        <span id="selected-count" class="bg-primary text-white px-3 py-1 rounded-full text-sm">0</span>
+                    </button>
+                    <div id="selected-contacts-list" class="mt-4 space-y-2 hidden">
+                        <div class="text-sm text-text-secondary">已选择联系人：</div>
+                        <div id="selected-names" class="flex flex-wrap gap-2">
+                            <!-- 动态生成已选择的联系人 -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 发送按钮 -->
+            <section id="send-section" class="mb-8">
+                <button id="send-btn" class="w-full primary-gradient rounded-3xl shadow-primary-btn p-4 text-center dynamic-card group disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <div class="relative z-10 transition-transform group-hover:scale-105">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-paper-plane text-white text-xl"></i>
+                        </div>
+                        <div class="text-white text-lg font-bold mb-1">发送通知</div>
+                        <div class="text-white text-sm opacity-90">群发祝福，传递心意</div>
+                    </div>
+                </button>
+            </section>
+        </main>
+
+        <!-- 底部导航栏 -->
+        <nav id="bottom-nav" class="fixed bottom-0 left-0 right-0 bg-white border-t border-border-light flex justify-around items-center h-16 px-2 safe-bottom z-40 max-w-sm mx-auto shadow-lg">
+            <a id="nav-home" href="P-HOME.html" class="flex flex-col items-center p-2 text-text-secondary group">
+                <div class="w-10 h-10 flex items-center justify-center mb-1 rounded-full group-hover:bg-primary/10 transition-colors">
+                    <i class="fas fa-home text-xl"></i>
+                </div>
+                <span class="text-xs">首页</span>
+            </a>
+            <a id="nav-ledger" href="P-LEDGER_LIST.html" class="flex flex-col items-center p-2 text-text-secondary group">
+                <div class="w-10 h-10 flex items-center justify-center mb-1 rounded-full group-hover:bg-primary/10 transition-colors">
+                    <i class="fas fa-book text-xl"></i>
+                </div>
+                <span class="text-xs">礼簿</span>
+            </a>
+            <a id="nav-contacts" href="P-CONTACT_LIST.html" class="flex flex-col items-center p-2 text-text-secondary group">
+                <div class="w-10 h-10 flex items-center justify-center mb-1 rounded-full group-hover:bg-primary/10 transition-colors">
+                    <i class="fas fa-users text-xl"></i>
+                </div>
+                <span class="text-xs">联系人</span>
+            </a>
+            <a id="nav-notify" href="#" class="flex flex-col items-center p-2 text-primary relative group">
+                <div class="w-10 h-10 flex items-center justify-center mb-1 rounded-full group-hover:bg-primary/10 transition-colors">
+                    <i class="fas fa-bell text-xl"></i>
+                </div>
+                <span class="text-xs font-medium">通知</span>
+                <span class="absolute -top-1 w-2 h-2 bg-primary rounded-full"></span>
+            </a>
+            <a id="nav-profile" href="P-SETTINGS.html" class="flex flex-col items-center p-2 text-text-secondary group">
+                <div class="w-10 h-10 flex items-center justify-center mb-1 rounded-full group-hover:bg-primary/10 transition-colors">
+                    <i class="fas fa-user text-xl"></i>
+                </div>
+                <span class="text-xs">我的</span>
+            </a>
+        </nav>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析URL参数的辅助函数
+            function getUrlParams() {
+                const params = {};
+                const queryString = window.location.search.substring(1);
+                const urlParams = new URLSearchParams(queryString);
+                
+                for(const [key, value] of urlParams.entries()) {
+                    params[key] = value;
+                }
+                return params;
+            }
+
+            // 获取URL参数
+            const params = getUrlParams();
+            let selectedContacts = [];
+
+            // 模板内容
+            const templates = {
+                happy: "亲爱的[姓名]，您好！我将于[时间]在[地点]举行[事由]，诚邀您拨冗出席，共同分享这份喜悦。期待您的光临！联系人：[联系人]",
+                sad: "亲爱的[姓名]，您好！[事由]不幸于[时间]离世，谨定于[时间]在[地点]举行告别仪式，恳请您前来送别。联系人：[联系人]"
+            };
+
+            // 预览内容
+            const previewContents = {
+                happy: "亲爱的张三，您好！我将于2024年1月15日在XX酒店举行婚礼，诚邀您拨冗出席，共同分享这份喜悦。期待您的光临！联系人：李四",
+                sad: "亲爱的张三，您好！家父不幸于2024年1月10日离世，谨定于2024年1月12日在XX殡仪馆举行告别仪式，恳请您前来送别。联系人：李四"
+            };
+
+            // 返回按钮点击事件
+            document.querySelector('#back-btn').addEventListener('click', function() {
+                window.history.back();
+            });
+
+            // 群发记录按钮点击事件
+            document.querySelector('#send-log-btn').addEventListener('click', function() {
+                window.location.href = 'P-SEND_LOG.html';
+            });
+
+            // 模板切换事件
+            const templateTabs = document.querySelectorAll('.template-tab');
+            const smsContent = document.querySelector('#sms-content');
+            const smsPreviewContent = document.querySelector('#sms-preview-content');
+
+            templateTabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // 移除所有active状态
+                    templateTabs.forEach(t => t.classList.remove('active'));
+                    
+                    // 添加当前active状态
+                    this.classList.add('active');
+                    
+                    // 更新短信内容和预览
+                    if (this.id === 'tab-happy') {
+                        smsContent.value = templates.happy;
+                        smsPreviewContent.textContent = previewContents.happy;
+                    } else if (this.id === 'tab-sad') {
+                        smsContent.value = templates.sad;
+                        smsPreviewContent.textContent = previewContents.sad;
+                    }
+                });
+            });
+
+            // 变量点击事件
+            const variableChips = document.querySelectorAll('.variable-chip');
+            variableChips.forEach(chip => {
+                chip.addEventListener('click', function() {
+                    const variable = this.dataset.variable;
+                    const textarea = document.querySelector('#sms-content');
+                    
+                    // 获取当前光标位置
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const currentValue = textarea.value;
+                    
+                    // 插入变量
+                    const newValue = currentValue.slice(0, start) + variable + currentValue.slice(end);
+                    textarea.value = newValue;
+                    
+                    // 移动光标到变量后面
+                    textarea.selectionStart = textarea.selectionEnd = start + variable.length;
+                    
+                    // 触发textarea的input事件更新预览
+                    textarea.dispatchEvent(new Event('input'));
+                });
+            });
+
+            // 短信内容变化时更新预览
+            smsContent.addEventListener('input', function() {
+                // 简单替换变量为示例值以显示预览效果
+                let previewText = this.value
+                    .replace(/\[姓名\]/g, '张三')
+                    .replace(/\[时间\]/g, '2024年1月15日')
+                    .replace(/\[地点\]/g, 'XX酒店')
+                    .replace(/\[事由\]/g, '婚礼')
+                    .replace(/\[联系人\]/g, '李四');
+                
+                smsPreviewContent.textContent = previewText;
+            });
+
+            // 选择联系人按钮点击事件
+            document.querySelector('#select-contacts-btn').addEventListener('click', function() {
+                // 跳转到联系人选择页，传递当前选择的联系人
+                const selectedContactIds = selectedContacts.map(contact => contact.id).join(',');
+                window.location.href = `P-CONTACT_SELECT.html?selected_contacts=${selectedContactIds}`;
+            });
+
+            // 发送按钮点击事件
+            document.querySelector('#send-btn').addEventListener('click', function() {
+                if (selectedContacts.length === 0) {
+                    alert('请先选择联系人');
+                    return;
+                }
+                
+                if (!smsContent.value.trim()) {
+                    alert('请输入短信内容');
+                    return;
+                }
+                
+                // 模拟调用系统短信界面
+                console.log('需要调用第三方接口实现系统短信发送功能');
+                
+                // 模拟发送成功
+                alert(`短信发送成功！共发送给${selectedContacts.length}位联系人`);
+                
+                // 记录发送历史（在实际应用中会调用API）
+                const sendLog = {
+                    time: new Date().toLocaleString(),
+                    count: selectedContacts.length,
+                    content: smsContent.value.substring(0, 50) + '...'
+                };
+                
+                console.log('发送记录:', sendLog);
+                
+                // 清空选择的联系人
+                selectedContacts = [];
+                updateSelectedContactsDisplay();
+            });
+
+            // 更新已选择联系人显示
+            function updateSelectedContactsDisplay() {
+                const selectedCount = document.querySelector('#selected-count');
+                const selectedContactsList = document.querySelector('#selected-contacts-list');
+                const selectedNames = document.querySelector('#selected-names');
+                
+                selectedCount.textContent = selectedContacts.length;
+                
+                if (selectedContacts.length > 0) {
+                    selectedContactsList.classList.remove('hidden');
+                    selectedNames.innerHTML = selectedContacts.map(contact => 
+                        `<span class="bg-primary/10 text-primary px-2 py-1 rounded-full text-sm">${contact.name}</span>`
+                    ).join('');
+                    
+                    // 启用发送按钮
+                    document.querySelector('#send-btn').disabled = false;
+                } else {
+                    selectedContactsList.classList.add('hidden');
+                    selectedNames.innerHTML = '';
+                    
+                    // 禁用发送按钮
+                    document.querySelector('#send-btn').disabled = true;
+                }
+            }
+
+            // 从URL参数中获取已选择的联系人
+            if (params.selected_contacts) {
+                // 模拟根据ID获取联系人信息
+                const mockContacts = {
+                    'contact1': { id: 'contact1', name: '张三', phone: '13800138000' },
+                    'contact2': { id: 'contact2', name: '李四', phone: '13900139000' },
+                    'contact3': { id: 'contact3', name: '王五', phone: '13600136000' }
+                };
+                
+                const contactIds = params.selected_contacts.split(',');
+                selectedContacts = contactIds.map(id => mockContacts[id]).filter(Boolean);
+                updateSelectedContactsDisplay();
+                
+                // 清除URL参数（可选）
+                history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            // 底部导航栏点击事件
+            document.querySelector('#nav-home').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-HOME.html';
+            });
+
+            document.querySelector('#nav-ledger').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-LEDGER_LIST.html';
+            });
+
+            document.querySelector('#nav-contacts').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-CONTACT_LIST.html';
+            });
+
+            document.querySelector('#nav-notify').addEventListener('click', function(e) {
+                e.preventDefault();
+                // 已在通知页面，无需操作
+            });
+
+            document.querySelector('#nav-profile').addEventListener('click', function(e) {
+                e.preventDefault();
+                window.location.href = 'P-SETTINGS.html';
+            });
+        });
+    </script>
+</body>
+</html>

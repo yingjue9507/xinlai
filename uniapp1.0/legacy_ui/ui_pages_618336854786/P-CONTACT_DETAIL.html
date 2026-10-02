@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心来 - 联系人详�?/title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#8B5CF6',
+                        tertiary: '#EC4899',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        info: '#06B6D4',
+                        'text-primary': '#1E293B',
+                        'text-secondary': '#64748B',
+                        'bg-primary': '#EEF2FF',
+                        'bg-secondary': '#F3E8FF',
+                        'card-bg': '#FFFFFF',
+                        'border-light': '#E2E8F0'
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        'primary-btn': '0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.2)'
+                    },
+                    borderRadius: {
+                        'xl': '0.75rem',
+                        '2xl': '1rem',
+                        '3xl': '1.5rem'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #EEF2FF 0%, #F3E8FF 100%);
+        }
+        
+        .primary-gradient {
+            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .primary-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .primary-gradient:hover::before {
+            opacity: 1;
+        }
+        
+        .secondary-gradient {
+            background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+        }
+        
+        .status-bar {
+            background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+        }
+        
+        .cloud-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+        }
+        
+        .dynamic-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dynamic-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .safe-top {
+            padding-top: env(safe-area-inset-top);
+        }
+
+        .record-item {
+            transition: all 0.2s ease;
+        }
+
+        .record-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="gradient-bg cloud-pattern min-h-screen">
+    <!-- iOS状态栏 -->
+    <div id="status-bar" class="status-bar text-white text-sm flex justify-between items-center px-4 py-1 safe-top">
+        <div class="flex items-center space-x-1">
+            <span class="font-medium">9:41</span>
+        </div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-xs"></i>
+            <i class="fas fa-wifi text-xs"></i>
+            <div class="w-6 h-3 border border-white rounded-sm">
+                <div class="w-4 h-1.5 bg-white rounded-sm m-0.5"></div>
+            </div>
+        </div>
+    </div>
+    <!-- 主容�?-->
+    <div id="main-container" class="max-w-sm mx-auto bg-white min-h-screen relative">
+        <!-- 顶部导航�?-->
+        <header id="top-header" class="bg-white px-4 py-3 border-b border-border-light">
+            <div id="header-content" class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button id="back-btn" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition-all">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <div>
+                        <h1 id="contact-name" class="text-lg font-bold text-text-primary">张三</h1>
+                        <p id="contact-phone" class="text-sm text-text-secondary">138****8888</p>
+                    </div>
+                </div>
+                <div class="w-12 h-12 bg-gradient-to-br from-primary to-tertiary rounded-2xl flex items-center justify-center shadow-lg">
+                    <span id="contact-avatar" class="text-white text-lg font-bold">�?/span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main id="main-content" class="px-4 py-6">
+            <!-- 累计统计区域 -->
+            <section id="stats-section" class="mb-8">
+                <div id="stats-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card overflow-hidden relative">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16"></div>
+                    <h2 id="stats-title" class="text-lg font-semibold text-text-primary mb-6 relative z-10">往来统�?/h2>
+                    <div id="stats-grid" class="grid grid-cols-2 gap-4 relative z-10">
+                        <div id="received-stat" class="text-center p-4 rounded-2xl bg-success/5">
+                            <div class="w-16 h-16 bg-gradient-to-br from-success to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                                <i class="fas fa-arrow-down text-white text-xl"></i>
+                            </div>
+                            <div id="total-received" class="text-2xl font-bold text-text-primary">¥2,300</div>
+                            <div class="text-sm text-text-secondary mt-1">累计收礼</div>
+                        </div>
+                        <div id="given-stat" class="text-center p-4 rounded-2xl bg-info/5">
+                            <div class="w-16 h-16 bg-gradient-to-br from-info to-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+                                <i class="fas fa-arrow-up text-white text-xl"></i>
+                            </div>
+                            <div id="total-given" class="text-2xl font-bold text-text-primary">¥1,800</div>
+                            <div class="text-sm text-text-secondary mt-1">累计送礼</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 往来记录列�?-->
+            <section id="records-section">
+                <div id="records-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <div id="records-header" class="flex items-center justify-between mb-6">
+                        <h2 class="text-lg font-semibold text-text-primary">往来记�?/h2>
+                        <span id="records-count" class="text-sm text-text-secondary">�?条记�?/span>
+                    </div>
+                    <div id="records-list" class="space-y-3">
+                        <!-- 记录项将通过JavaScript动态生�?-->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析URL参数的辅助函�?            function getUrlParams() {
+                const params = {};
+                const queryString = window.location.search.substring(1);
+                const urlParams = new URLSearchParams(queryString);
+                
+                for(const [key, value] of urlParams.entries()) {
+                    params[key] = value;
+                }
+                return params;
+            }
+
+            // 定义API基础路径
+            const hostname = window.location.hostname || 'localhost';
+            const protocol = (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:') ? 'http:' : window.location.protocol;
+            const overrideApiBase = localStorage.getItem('API_BASE_OVERRIDE');
+            const API_BASE = (overrideApiBase && overrideApiBase.trim()) ? overrideApiBase.replace(/\/+$/, '') : `${protocol}//${hostname}:3030/api`;
+
+            // 获取URL参数
+            const params = getUrlParams();
+            const contactId = params.contact_id;
+
+            // 加载联系人数�?            async function loadContactData(contactId) {
+                if (!contactId) {
+                    showErrorState('缺少联系人ID');
+                    return;
+                }
+
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    window.location.href = 'P-LOGIN.html';
+                    return;
+                }
+
+                try {
+                    console.log(`加载联系人详�? ${contactId}`);
+                    const response = await fetch(`${API_BASE}/contacts/${contactId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        if (result.success && result.data) {
+                            renderContactInfo(result.data.contact);
+                            renderRecordsList(result.data.records);
+                        } else {
+                            throw new Error(result.message || '获取数据失败');
+                        }
+                    } else {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                } catch (error) {
+                    console.error('加载联系人数据失�?', error);
+                    showErrorState('加载联系人数据失败，请重�?);
+                }
+            }
+
+            // 显示错误状�?            function showErrorState(message) {
+                const mainContent = document.querySelector('#main-content');
+                mainContent.innerHTML = `
+                    <div class="flex flex-col items-center justify-center h-64 text-center">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                        </div>
+                        <h3 class="text-lg font-semibold text-gray-800 mb-2">无法加载数据</h3>
+                        <p class="text-gray-500 mb-6">${message}</p>
+                        <button onclick="window.location.reload()" class="px-6 py-2 bg-primary text-white rounded-xl shadow-md hover:shadow-lg transition-all">
+                            重试
+                        </button>
+                        <a href="P-CONTACT_LIST.html" class="mt-4 text-primary text-sm">返回列表</a>
+                    </div>
+                `;
+            }
+
+            // 渲染联系人基本信�?            function renderContactInfo(contact) {
+                document.querySelector('#contact-name').textContent = contact.name;
+                document.querySelector('#contact-phone').textContent = contact.phoneNumber || '无电话号�?;
+                document.querySelector('#contact-avatar').textContent = contact.name.charAt(0);
+                
+                // 更新统计数据
+                document.querySelector('#total-received').textContent = `¥${(contact.totalReceived || 0).toLocaleString()}`;
+                document.querySelector('#total-given').textContent = `¥${(contact.totalGiven || 0).toLocaleString()}`;
+            }
+
+            // 渲染记录列表
+            function renderRecordsList(records) {
+                const recordsList = document.querySelector('#records-list');
+                const recordsCount = document.querySelector('#records-count');
+                
+                recordsList.innerHTML = '';
+                recordsCount.textContent = `�?{records.length}条记录`;
+
+                if (records.length === 0) {
+                    recordsList.innerHTML = '<div class="text-center text-gray-500 py-4">暂无往来记�?/div>';
+                    return;
+                }
+
+                records.forEach(function(record, index) {
+                    // 判断收支方向：received 是收礼，sent/given 是送礼
+                    // 根据 ledgerType 判断: '我办�? -> 收礼(received), '参加别人的事' -> 送礼(sent)
+                    const isReceived = record.ledgerType === '我办�?;
+                    
+                    const amountClass = isReceived ? 'text-success' : 'text-danger';
+                    
+                    const displayClass = isReceived ? 'text-success' : 'text-danger';
+                    const iconClass = isReceived ? 'fas fa-arrow-down' : 'fas fa-arrow-up';
+                    const iconBgClass = isReceived ? 'from-success to-green-500' : 'from-danger to-red-500';
+                    const amountSign = isReceived ? '+' : '-';
+                    const bgHoverClass = isReceived ? 'hover:bg-success/5' : 'hover:bg-danger/5';
+
+                    const recordElement = document.createElement('div');
+                    recordElement.id = `record-item-${index}`;
+                    recordElement.className = `record-item flex items-center space-x-3 p-4 bg-gray-50 rounded-2xl ${bgHoverClass} transition-all cursor-pointer`;
+                    recordElement.dataset.ledgerId = record.ledgerId;
+
+                    // 显示金额或物�?                    const amountDisplay = record.isGiftItem ? '物品' : `${amountSign}¥${record.amount}`;
+                    const occasionDisplay = record.occasion || record.ledgerName || '未命名礼�?;
+
+                    recordElement.innerHTML = `
+                        <div class="w-12 h-12 bg-gradient-to-br ${iconBgClass} rounded-xl flex items-center justify-center shadow-md">
+                            <i class="${iconClass} text-white text-base"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <span class="font-medium text-text-primary">${occasionDisplay}</span>
+                                <span class="${displayClass} font-bold">${amountDisplay}</span>
+                            </div>
+                            <div class="flex items-center justify-between mt-1">
+                                <span class="text-sm text-text-secondary">${record.note || (record.isGiftItem ? record.giftDescription : '') || '无备�?}</span>
+                                <span class="text-xs text-text-secondary">${formatDate(record.recordDate)}</span>
+                            </div>
+                        </div>
+                    `;
+
+                    recordsList.appendChild(recordElement);
+                });
+
+                // 为记录项添加点击事件
+                const recordItems = document.querySelectorAll('.record-item');
+                recordItems.forEach(function(item) {
+                    item.addEventListener('click', function() {
+                        const ledgerId = this.dataset.ledgerId;
+                        if (ledgerId) {
+                            window.location.href = `P-LEDGER_DETAIL.html?ledger_id=${ledgerId}`;
+                        }
+                    });
+                });
+            }
+
+            // 格式化日期显�?            function formatDate(dateString) {
+                const date = new Date(dateString);
+                const now = new Date();
+                const diffTime = Math.abs(now - date);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+                if (diffDays === 0) {
+                    return '今天';
+                } else if (diffDays === 1) {
+                    return '昨天';
+                } else if (diffDays === 2) {
+                    return '2天前';
+                } else if (diffDays === 3) {
+                    return '3天前';
+                } else if (diffDays < 7) {
+                    return `${diffDays}天前`;
+                } else if (diffDays < 30) {
+                    const weeks = Math.floor(diffDays / 7);
+                    return `${weeks}周前`;
+                } else {
+                    const month = date.getMonth() + 1;
+                    const day = date.getDate();
+                    return `${month}�?{day}日`;
+                }
+            }
+
+            // 返回按钮点击事件
+            document.querySelector('#back-btn').addEventListener('click', function() {
+                window.history.back();
+            });
+
+            // 页面加载时加载联系人数据
+            if (contactId) {
+                loadContactData(contactId);
+            } else {
+                // 如果没有ID，尝试从 URL 参数中找 contactName (兼容旧链�?
+                // 但目�?P-CONTACT_LIST.html 传递的�?contact_id
+                console.error('No contact_id found');
+                alert('未指定联系人');
+                window.location.href = 'P-CONTACT_LIST.html';
+            }
+        });
+    </script>
+</body>
+</html>

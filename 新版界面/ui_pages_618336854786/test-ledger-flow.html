@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>礼薄列表流程测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .test-link:hover {
+            background: #0056b3;
+        }
+        .flow-step {
+            background: #f8f9fa;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 4px solid #007bff;
+        }
+        .step-number {
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>礼薄列表 → 添加记录 流程测试</h1>
+    
+    <div class="test-section">
+        <h2>用户操作流程</h2>
+        <div class="flow-step">
+            <span class="step-number">第1步：</span> 
+            访问礼薄列表页面
+            <a href="P-LEDGER_LIST.html" class="test-link" target="_blank">打开礼薄列表</a>
+        </div>
+        <div class="flow-step">
+            <span class="step-number">第2步：</span> 
+            点击某个礼薄进入详情页
+            <p><small>在礼薄列表中点击任意一个礼薄项目</small></p>
+        </div>
+        <div class="flow-step">
+            <span class="step-number">第3步：</span> 
+            在礼薄详情页点击右上角的"+"按钮
+            <p><small>这会弹出添加记录的模态框</small></p>
+        </div>
+        <div class="flow-step">
+            <span class="step-number">第4步：</span> 
+            在模态框中点击"手动录入"
+            <p><small>这会跳转到添加记录页面，并带有正确的ledger_id参数</small></p>
+        </div>
+        <div class="flow-step">
+            <span class="step-number">第5步：</span> 
+            验证添加记录页面的礼簿信息显示
+            <p><small>应该显示当前礼簿的名称和类型，并自动选择对应的记录类型</small></p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>直接测试链接</h2>
+        <p>以下链接模拟从礼薄详情页进入添加记录页面的场景：</p>
+        
+        <h3>模拟"我办事"类型礼簿</h3>
+        <a href="P-ADD_RECORD.html?ledger_id=test-ledger-id-1" class="test-link" target="_blank">
+            测试我办事礼簿的添加记录
+        </a>
+        <p><small>应该显示礼簿信息，自动选择"收到"类型</small></p>
+        
+        <h3>模拟"参加别人的事"类型礼簿</h3>
+        <a href="P-ADD_RECORD.html?ledger_id=test-ledger-id-2" class="test-link" target="_blank">
+            测试参加别人事礼簿的添加记录
+        </a>
+        <p><small>应该显示礼簿信息，自动选择"送出"类型</small></p>
+    </div>
+    
+    <div class="test-section">
+        <h2>预期验证点</h2>
+        <ul>
+            <li>✅ 礼簿信息显示框应该显示正确的礼簿名称</li>
+            <li>✅ 礼簿类型标识应该正确（我办事=绿色，参加别人的事=橙色）</li>
+            <li>✅ 记录类型应该根据礼簿类型自动选择</li>
+            <li>✅ 提示信息应该显示"正在使用指定的礼簿"</li>
+            <li>✅ 保存记录时应该使用正确的礼簿ID</li>
+            <li>✅ 不应该出现"未找到礼薄"的错误</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>调试检查点</h2>
+        <p>打开浏览器开发者工具的控制台，检查以下信息：</p>
+        <ul>
+            <li>URL参数解析是否正确</li>
+            <li>礼簿详情API请求是否成功</li>
+            <li>礼簿信息是否正确更新到界面</li>
+            <li>记录类型自动选择是否执行</li>
+            <li>保存记录时的礼簿ID是否正确</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>如果仍有问题</h2>
+        <p>如果从礼薄列表进入仍然有问题，可能的原因：</p>
+        <ol>
+            <li>礼簿ID传递过程中丢失或格式错误</li>
+            <li>礼簿详情API返回的数据结构不匹配</li>
+            <li>用户认证token过期或无效</li>
+            <li>礼簿不存在或用户无权限访问</li>
+            <li>前端JavaScript代码执行顺序问题</li>
+        </ol>
+        <p>请检查控制台的具体错误信息，这将帮助定位问题。</p>
+    </div>
+</body>
+</html>

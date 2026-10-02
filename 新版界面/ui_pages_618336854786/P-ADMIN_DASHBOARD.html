@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心来 - 管理后台</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E293B',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        warning: '#F59E0B',
+                        'text-primary': '#1E293B',
+                        'text-secondary': '#64748B',
+                        'bg-primary': '#F1F5F9',
+                        'card-bg': '#FFFFFF',
+                        'border-light': '#E2E8F0'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F1F5F9;
+        }
+        .nav-item.active {
+            background-color: rgba(59, 130, 246, 0.1);
+            color: #3B82F6;
+            border-right: 3px solid #3B82F6;
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden">
+    <!-- 侧边�?-->
+    <aside class="w-64 bg-white shadow-md flex flex-col z-10">
+        <div class="p-6 border-b border-border-light flex items-center space-x-3">
+            <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center shadow-md">
+                <i class="fas fa-shield-alt text-white text-lg"></i>
+            </div>
+            <div>
+                <h1 class="text-xl font-bold text-text-primary">心来后台</h1>
+                <p class="text-xs text-text-secondary">管理员系�?/p>
+            </div>
+        </div>
+        
+        <nav class="flex-1 py-6 space-y-1">
+            <a href="#" id="nav-users" class="nav-item active flex items-center px-6 py-3 text-text-secondary hover:bg-gray-50 transition-colors">
+                <i class="fas fa-users w-6"></i>
+                <span class="font-medium">用户管理</span>
+            </a>
+            <a href="#" id="nav-announcements" class="nav-item flex items-center px-6 py-3 text-text-secondary hover:bg-gray-50 transition-colors">
+                <i class="fas fa-bullhorn w-6"></i>
+                <span class="font-medium">公告管理</span>
+            </a>
+        </nav>
+        
+        <div class="p-6 border-t border-border-light">
+            <button id="logout-btn" class="flex items-center text-text-secondary hover:text-danger transition-colors">
+                <i class="fas fa-sign-out-alt w-6"></i>
+                <span class="font-medium">退出登�?/span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="flex-1 overflow-y-auto p-8">
+        <!-- 用户管理面板 -->
+        <div id="panel-users" class="space-y-6">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-text-primary">用户列表</h2>
+                <div class="bg-white px-4 py-2 rounded-lg shadow-sm border border-border-light text-text-secondary">
+                    <span id="total-users" class="font-bold text-primary">0</span> 位注册用�?                </div>
+            </div>
+            
+            <div class="bg-white rounded-xl shadow-sm overflow-hidden border border-border-light">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-gray-50 text-text-secondary text-sm font-semibold border-b border-border-light">
+                                <th class="p-4">用户ID</th>
+                                <th class="p-4">手机�?/th>
+                                <th class="p-4">注册时间</th>
+                                <th class="p-4">最后登�?/th>
+                                <th class="p-4">数据概览</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list-body" class="text-text-primary text-sm">
+                            <tr>
+                                <td colspan="5" class="p-8 text-center text-text-secondary">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i> 加载�?..
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 公告管理面板 -->
+        <div id="panel-announcements" class="space-y-6 hidden">
+            <div class="flex justify-between items-center">
+                <h2 class="text-2xl font-bold text-text-primary">系统公告</h2>
+                <button id="create-announcement-btn" class="bg-primary text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-600 transition-colors flex items-center">
+                    <i class="fas fa-plus mr-2"></i> 发布公告
+                </button>
+            </div>
+            
+            <div id="announcement-list" class="grid grid-cols-1 gap-6">
+                <div class="text-center py-12 text-text-secondary">
+                    <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                    <p>加载公告�?..</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 公告编辑弹窗 -->
+    <div id="announcement-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h3 id="modal-title" class="text-xl font-bold text-text-primary">发布新公�?/h3>
+                <button id="close-modal-btn" class="text-text-secondary hover:text-text-primary">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <form id="announcement-form" class="space-y-4">
+                <input type="hidden" id="announcement-id">
+                
+                <div>
+                    <label class="block text-sm font-medium text-text-primary mb-1">标题</label>
+                    <input type="text" id="announcement-title" class="w-full px-4 py-2 border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required placeholder="请输入公告标�?>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-text-primary mb-1">内容</label>
+                    <textarea id="announcement-content" rows="4" class="w-full px-4 py-2 border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" required placeholder="请输入公告内�?></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-text-primary mb-1">事件类型</label>
+                        <select id="ann-type" class="w-full px-3 py-2 border border-border-light rounded-lg focus:outline-none focus:border-primary">
+                            <option value="红事">红事 (喜庆)</option>
+                            <option value="白事">白事 (丧葬)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-text-primary mb-1">事件日期</label>
+                        <input type="date" id="ann-date" class="w-full px-3 py-2 border border-border-light rounded-lg focus:outline-none focus:border-primary" required>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-text-primary mb-1">地点</label>
+                        <input type="text" id="ann-location" class="w-full px-3 py-2 border border-border-light rounded-lg focus:outline-none focus:border-primary" placeholder="可�?>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-text-primary mb-1">联系方式</label>
+                        <input type="text" id="ann-contact" class="w-full px-3 py-2 border border-border-light rounded-lg focus:outline-none focus:border-primary" placeholder="可�?>
+                    </div>
+                </div>
+                
+                <div class="flex items-center">
+                    <input type="checkbox" id="announcement-active" class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary" checked>
+                    <label for="announcement-active" class="ml-2 text-sm text-text-primary">立即发布（激活状态）</label>
+                </div>
+                
+                <div class="pt-4 flex space-x-3">
+                    <button type="button" id="cancel-btn" class="flex-1 py-2 border border-border-light text-text-secondary rounded-lg hover:bg-gray-50">取消</button>
+                    <button type="submit" class="flex-1 py-2 bg-primary text-white rounded-lg hover:bg-blue-600 shadow-md">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 检查登录状�?            const token = localStorage.getItem('adminToken');
+            if (!token) {
+                window.location.href = 'P-ADMIN_LOGIN.html';
+                return;
+            }
+            
+            // 定义API基础路径
+            const hostname = window.location.hostname || 'localhost';
+            const protocol = (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:') ? 'http:' : window.location.protocol;
+            const overrideApiBase = localStorage.getItem('API_BASE_OVERRIDE');
+            const API_BASE = (overrideApiBase && overrideApiBase.trim()) ? overrideApiBase.replace(/\/+$/, '') : `${protocol}//${hostname}:3030/api`;
+            
+            // 导航切换
+            const navUsers = document.getElementById('nav-users');
+            const navAnnouncements = document.getElementById('nav-announcements');
+            const panelUsers = document.getElementById('panel-users');
+            const panelAnnouncements = document.getElementById('panel-announcements');
+            
+            navUsers.addEventListener('click', () => switchPanel('users'));
+            navAnnouncements.addEventListener('click', () => switchPanel('announcements'));
+            
+            function switchPanel(panel) {
+                if (panel === 'users') {
+                    navUsers.classList.add('active');
+                    navAnnouncements.classList.remove('active');
+                    panelUsers.classList.remove('hidden');
+                    panelAnnouncements.classList.add('hidden');
+                    loadUsers();
+                } else {
+                    navUsers.classList.remove('active');
+                    navAnnouncements.classList.add('active');
+                    panelUsers.classList.add('hidden');
+                    panelAnnouncements.classList.remove('hidden');
+                    loadAnnouncements();
+                }
+            }
+            
+            // 退出登�?            document.getElementById('logout-btn').addEventListener('click', () => {
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                window.location.href = 'P-ADMIN_LOGIN.html';
+            });
+            
+            // 加载用户列表
+            async function loadUsers() {
+                try {
+                    const response = await fetch(`${API_BASE}/admin/users`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        const users = result.data;
+                        document.getElementById('total-users').textContent = users.length;
+                        
+                        const tbody = document.getElementById('user-list-body');
+                        tbody.innerHTML = '';
+                        
+                        users.forEach(user => {
+                            const tr = document.createElement('tr');
+                            tr.className = 'border-b border-border-light hover:bg-gray-50 transition-colors';
+                            tr.innerHTML = `
+                                <td class="p-4 font-mono text-xs text-text-secondary">${user.id}</td>
+                                <td class="p-4 font-medium">${user.phoneNumber}</td>
+                                <td class="p-4 text-text-secondary">${new Date(user.registrationDate).toLocaleDateString()}</td>
+                                <td class="p-4 text-text-secondary">${new Date(user.lastLoginDate).toLocaleString()}</td>
+                                <td class="p-4">
+                                    <div class="flex space-x-3 text-xs">
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-600 rounded">礼簿: ${user._count.ledgers}</span>
+                                        <span class="px-2 py-1 bg-green-100 text-green-600 rounded">联系�? ${user._count.contacts}</span>
+                                    </div>
+                                </td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    }
+                } catch (error) {
+                    console.error('加载用户失败:', error);
+                    document.getElementById('user-list-body').innerHTML = '<tr><td colspan="5" class="p-8 text-center text-red-500">加载失败，请重试</td></tr>';
+                }
+            }
+            
+            // 全局变量存储当前公告列表
+            let currentAnnouncements = [];
+
+            // 加载公告列表
+            async function loadAnnouncements() {
+                try {
+                    const response = await fetch(`${API_BASE}/admin/announcements`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        currentAnnouncements = result.data; // 保存数据
+                        const list = document.getElementById('announcement-list');
+                        list.innerHTML = '';
+                        
+                        if (result.data.length === 0) {
+                            list.innerHTML = '<div class="text-center py-12 text-text-secondary">暂无公告</div>';
+                            return;
+                        }
+                        
+                        result.data.forEach(item => {
+                            const card = document.createElement('div');
+                            card.className = 'bg-white p-6 rounded-xl shadow-sm border border-border-light hover:shadow-md transition-shadow';
+                            
+                            const eventTypeClass = item.eventType === '红事' ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-600';
+                            const eventDate = new Date(item.eventDate).toLocaleDateString();
+                            
+                            card.innerHTML = `
+                                <div class="flex justify-between items-start mb-4">
+                                    <div>
+                                        <div class="flex items-center space-x-2 mb-1">
+                                            <span class="px-2 py-0.5 ${eventTypeClass} text-xs rounded-full font-bold">${item.eventType || '未分�?}</span>
+                                            <h3 class="text-lg font-bold text-text-primary">${item.title}</h3>
+                                            ${item.isActive ? '<span class="px-2 py-0.5 bg-green-100 text-green-600 text-xs rounded-full">已发�?/span>' : '<span class="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full">草稿</span>'}
+                                        </div>
+                                        <div class="flex items-center space-x-4 text-xs text-text-secondary mt-2">
+                                            <span><i class="fas fa-calendar-alt mr-1"></i>${eventDate}</span>
+                                            ${item.location ? `<span><i class="fas fa-map-marker-alt mr-1"></i>${item.location}</span>` : ''}
+                                            ${item.contactInfo ? `<span><i class="fas fa-phone mr-1"></i>${item.contactInfo}</span>` : ''}
+                                        </div>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button onclick="editAnnouncement('${item.id}')" class="p-2 text-primary hover:bg-blue-50 rounded-lg transition-colors">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="deleteAnnouncement('${item.id}')" class="p-2 text-danger hover:bg-red-50 rounded-lg transition-colors">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded-lg text-text-secondary text-sm whitespace-pre-wrap">${item.content}</div>
+                            `;
+                            list.appendChild(card);
+                        });
+                    }
+                } catch (error) {
+                    console.error('加载公告失败:', error);
+                }
+            }
+            
+            // 公告管理相关逻辑
+            const modal = document.getElementById('announcement-modal');
+            const form = document.getElementById('announcement-form');
+            
+            document.getElementById('create-announcement-btn').addEventListener('click', () => {
+                document.getElementById('modal-title').textContent = '发布新公�?;
+                document.getElementById('announcement-id').value = '';
+                form.reset();
+                // 设置默认日期为今�?                document.getElementById('ann-date').valueAsDate = new Date();
+                modal.classList.remove('hidden');
+            });
+            
+            document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+            document.getElementById('cancel-btn').addEventListener('click', closeModal);
+            
+            function closeModal() {
+                modal.classList.add('hidden');
+            }
+            
+            // 暴露给全局以便在HTML中调�?            window.editAnnouncement = function(id) {
+                const item = currentAnnouncements.find(a => a.id === id);
+                if (!item) return;
+
+                document.getElementById('modal-title').textContent = '编辑公告';
+                document.getElementById('announcement-id').value = id;
+                document.getElementById('announcement-title').value = item.title;
+                document.getElementById('announcement-content').value = item.content;
+                document.getElementById('ann-type').value = item.eventType || '红事';
+                
+                // 处理日期格式 YYYY-MM-DD
+                if (item.eventDate) {
+                    const date = new Date(item.eventDate);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    document.getElementById('ann-date').value = `${year}-${month}-${day}`;
+                }
+                
+                document.getElementById('ann-location').value = item.location || '';
+                document.getElementById('ann-contact').value = item.contactInfo || '';
+                document.getElementById('announcement-active').checked = item.isActive;
+                modal.classList.remove('hidden');
+            };
+            
+            window.deleteAnnouncement = async function(id) {
+                if (!confirm('确定要删除这条公告吗�?)) return;
+                
+                try {
+                    const response = await fetch(`${API_BASE}/admin/announcements/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (response.ok) {
+                        loadAnnouncements();
+                    } else {
+                        alert('删除失败');
+                    }
+                } catch (error) {
+                    console.error('删除失败:', error);
+                }
+            };
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const id = document.getElementById('announcement-id').value;
+                const title = document.getElementById('announcement-title').value;
+                const content = document.getElementById('announcement-content').value;
+                const eventType = document.getElementById('ann-type').value;
+                const eventDate = document.getElementById('ann-date').value;
+                const location = document.getElementById('ann-location').value;
+                const contactInfo = document.getElementById('ann-contact').value;
+                const isActive = document.getElementById('announcement-active').checked;
+                
+                const url = id ? `${API_BASE}/admin/announcements/${id}` : `${API_BASE}/admin/announcements`;
+                const method = id ? 'PUT' : 'POST';
+                
+                try {
+                    const response = await fetch(url, {
+                        method: method,
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ 
+                            title, 
+                            content, 
+                            eventType, 
+                            eventDate, 
+                            location, 
+                            contactInfo, 
+                            isActive 
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        closeModal();
+                        loadAnnouncements();
+                    } else {
+                        alert(result.message || '操作失败');
+                    }
+                } catch (error) {
+                    console.error('保存失败:', error);
+                    alert('保存失败，请重试');
+                }
+            });
+            
+            // 初始加载
+            loadUsers();
+        });
+    </script>
+</body>
+</html>

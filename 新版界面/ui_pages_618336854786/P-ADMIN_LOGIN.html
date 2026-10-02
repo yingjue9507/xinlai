@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心来 - 管理员登�?/title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#1E293B',
+                        'text-primary': '#1E293B',
+                        'text-secondary': '#64748B',
+                        'bg-primary': '#F1F5F9',
+                        'card-bg': '#FFFFFF',
+                        'border-light': '#E2E8F0'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F1F5F9;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-2xl shadow-lg max-w-sm w-full">
+        <div class="text-center mb-8">
+            <div class="w-16 h-16 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <i class="fas fa-user-shield text-white text-2xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-text-primary">管理员登�?/h1>
+            <p class="text-text-secondary text-sm mt-2">心来后台管理系统</p>
+        </div>
+
+        <form id="admin-login-form" class="space-y-6">
+            <div>
+                <label class="block text-sm font-medium text-text-primary mb-2">账号</label>
+                <input 
+                    type="text" 
+                    id="username" 
+                    class="w-full px-4 py-3 border border-border-light rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                    placeholder="请输入管理员账号"
+                    required
+                >
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-text-primary mb-2">密码</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    class="w-full px-4 py-3 border border-border-light rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                    placeholder="请输入密�?
+                    required
+                >
+            </div>
+
+            <button 
+                type="submit" 
+                id="submit-btn"
+                class="w-full bg-primary text-white py-3 rounded-xl font-semibold hover:bg-blue-600 transition-colors shadow-md"
+            >
+                登录
+            </button>
+        </form>
+
+        <div id="error-message" class="mt-4 text-center text-red-500 text-sm hidden"></div>
+    </div>
+
+    <script>
+        document.getElementById('admin-login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const submitBtn = document.getElementById('submit-btn');
+            const errorMsg = document.getElementById('error-message');
+
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登录�?..';
+            errorMsg.classList.add('hidden');
+
+            try {
+                const hostname = window.location.hostname || 'localhost';
+                const protocol = (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:') ? 'http:' : window.location.protocol;
+            const overrideApiBase = localStorage.getItem('API_BASE_OVERRIDE');
+            const API_BASE = (overrideApiBase && overrideApiBase.trim()) ? overrideApiBase.replace(/\/+$/, '') : `${protocol}//${hostname}:3030/api`;
+                const response = await fetch(`${API_BASE}/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    localStorage.setItem('adminToken', result.data.token);
+                    localStorage.setItem('adminUser', JSON.stringify(result.data.admin));
+                    window.location.href = 'P-ADMIN_DASHBOARD.html';
+                } else {
+                    throw new Error(result.message || '登录失败');
+                }
+            } catch (error) {
+                errorMsg.textContent = error.message;
+                errorMsg.classList.remove('hidden');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '登录';
+            }
+        });
+    </script>
+</body>
+</html>

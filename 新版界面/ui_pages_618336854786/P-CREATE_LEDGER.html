@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心来 - 创建礼簿</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#8B5CF6',
+                        tertiary: '#EC4899',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        info: '#06B6D4',
+                        'text-primary': '#1E293B',
+                        'text-secondary': '#64748B',
+                        'bg-primary': '#EEF2FF',
+                        'bg-secondary': '#F3E8FF',
+                        'card-bg': '#FFFFFF',
+                        'border-light': '#E2E8F0'
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        'primary-btn': '0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.2)'
+                    },
+                    borderRadius: {
+                        'xl': '0.75rem',
+                        '2xl': '1rem',
+                        '3xl': '1.5rem'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #EEF2FF 0%, #F3E8FF 100%);
+        }
+        
+        .primary-gradient {
+            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .primary-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .primary-gradient:hover::before {
+            opacity: 1;
+        }
+        
+        .status-bar {
+            background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+        }
+        
+        .cloud-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+        }
+        
+        .dynamic-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dynamic-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .safe-top {
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        .radio-option {
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .radio-option.selected {
+            border-color: #3B82F6;
+            background-color: rgba(59, 130, 246, 0.05);
+        }
+        
+        .input-focus:focus {
+            outline: none;
+            border-color: #3B82F6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .occasion-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+        }
+        
+        .wedding-icon { background: linear-gradient(135deg, #EC4899 0%, #F472B6 100%); }
+        .baby-icon { background: linear-gradient(135deg, #10B981 0%, #34D399 100%); }
+        .house-icon { background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%); }
+        .birthday-icon { background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%); }
+        .funeral-icon { background: linear-gradient(135deg, #6B7280 0%, #9CA3AF 100%); }
+        .other-icon { background: linear-gradient(135deg, #06B6D4 0%, #0891B2 100%); }
+    </style>
+</head>
+<body class="gradient-bg cloud-pattern min-h-screen">
+    <!-- iOS状态栏 -->
+    <div id="status-bar" class="status-bar text-white text-sm flex justify-between items-center px-4 py-1 safe-top">
+        <div class="flex items-center space-x-1">
+            <span class="font-medium">9:41</span>
+        </div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-xs"></i>
+            <i class="fas fa-wifi text-xs"></i>
+            <div class="w-6 h-3 border border-white rounded-sm">
+                <div class="w-4 h-1.5 bg-white rounded-sm m-0.5"></div>
+            </div>
+        </div>
+    </div>
+    <!-- 主容�?-->
+    <div id="main-container" class="max-w-sm mx-auto bg-white min-h-screen relative">
+        <!-- 顶部导航�?-->
+        <header id="top-header" class="bg-white px-4 py-3 border-b border-border-light">
+            <div id="header-content" class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button id="back-btn" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition-all">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h1 class="text-lg font-bold text-text-primary">创建礼簿</h1>
+                </div>
+            </div>
+        </header>
+        
+        <!-- 主要内容区域 -->
+        <main id="main-content" class="px-4 py-6">
+            <!-- 礼簿类型选择 -->
+            <section id="ledger-type-section" class="mb-8">
+                <div id="type-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <h2 id="type-title" class="text-lg font-semibold text-text-primary mb-6">礼簿类型</h2>
+                    <div id="type-options" class="space-y-3">
+                        <div id="type-option-1" class="radio-option p-4 rounded-2xl cursor-pointer" data-type="我办�?>
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-gradient-to-br from-primary to-tertiary rounded-xl flex items-center justify-center shadow-md">
+                                    <i class="fas fa-heart text-white text-lg"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-medium text-text-primary">我办�?/div>
+                                    <div class="text-sm text-text-secondary">记录收到的礼�?/div>
+                                </div>
+                                <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                    <div class="w-3 h-3 bg-primary rounded-full hidden"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="type-option-2" class="radio-option p-4 rounded-2xl cursor-pointer" data-type="参加别人的事">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-12 h-12 bg-gradient-to-br from-info to-blue-500 rounded-xl flex items-center justify-center shadow-md">
+                                    <i class="fas fa-gift text-white text-lg"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="font-medium text-text-primary">参加别人的事</div>
+                                    <div class="text-sm text-text-secondary">记录送出的礼�?/div>
+                                </div>
+                                <div class="w-6 h-6 border-2 border-gray-300 rounded-full flex items-center justify-center">
+                                    <div class="w-3 h-3 bg-primary rounded-full hidden"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 事由选择 -->
+            <section id="occasion-section" class="mb-8">
+                <div id="occasion-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <h2 id="occasion-title" class="text-lg font-semibold text-text-primary mb-6">事由</h2>
+                    <div id="occasion-options" class="grid grid-cols-2 gap-3">
+                        <div id="occasion-wedding" class="radio-option p-4 rounded-2xl cursor-pointer text-center" data-occasion="婚嫁">
+                            <div class="occasion-icon wedding-icon mx-auto mb-3">
+                                <i class="fas fa-heart"></i>
+                            </div>
+                            <div class="font-medium text-text-primary text-sm">婚嫁</div>
+                        </div>
+                        
+                        <div id="occasion-baby" class="radio-option p-4 rounded-2xl cursor-pointer text-center" data-occasion="满月">
+                            <div class="occasion-icon baby-icon mx-auto mb-3">
+                                <i class="fas fa-baby"></i>
+                            </div>
+                            <div class="font-medium text-text-primary text-sm">满月</div>
+                        </div>
+                        
+                        <div id="occasion-house" class="radio-option p-4 rounded-2xl cursor-pointer text-center" data-occasion="乔迁">
+                            <div class="occasion-icon house-icon mx-auto mb-3">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <div class="font-medium text-text-primary text-sm">乔迁</div>
+                        </div>
+                        
+                        <div id="occasion-birthday" class="radio-option p-4 rounded-2xl cursor-pointer text-center" data-occasion="生日">
+                            <div class="occasion-icon birthday-icon mx-auto mb-3">
+                                <i class="fas fa-birthday-cake"></i>
+                            </div>
+                            <div class="font-medium text-text-primary text-sm">生日</div>
+                        </div>
+                        
+                        <div id="occasion-funeral" class="radio-option p-4 rounded-2xl cursor-pointer text-center" data-occasion="白事">
+                            <div class="occasion-icon funeral-icon mx-auto mb-3">
+                                <i class="fas fa-cross"></i>
+                            </div>
+                            <div class="font-medium text-text-primary text-sm">白事</div>
+                        </div>
+                        
+                        <div id="occasion-other" class="radio-option p-4 rounded-2xl cursor-pointer text-center" data-occasion="其他">
+                            <div class="occasion-icon other-icon mx-auto mb-3">
+                                <i class="fas fa-ellipsis-h"></i>
+                            </div>
+                            <div class="font-medium text-text-primary text-sm">其他</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 礼簿名称输入 -->
+            <section id="name-section" class="mb-8">
+                <div id="name-card" class="bg-white rounded-3xl shadow-card p-6 dynamic-card">
+                    <h2 id="name-title" class="text-lg font-semibold text-text-primary mb-6">礼簿名称</h2>
+                    <div class="space-y-2">
+                        <label for="ledger-name" class="block text-sm font-medium text-text-primary">为您的礼簿起个名�?/label>
+                        <input 
+                            type="text" 
+                            id="ledger-name" 
+                            name="ledger-name" 
+                            class="w-full px-4 py-3 border border-border-light rounded-2xl input-focus transition-all" 
+                            placeholder="例如：我的婚礼、张三的生日"
+                            maxlength="20"
+                        >
+                        <div class="text-xs text-text-secondary text-right">
+                            <span id="char-count">0</span>/20
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 创建按钮 -->
+            <section id="create-section" class="mb-8">
+                <button id="create-btn" class="w-full primary-gradient rounded-3xl shadow-primary-btn p-4 text-center dynamic-card group disabled:opacity-50 disabled:cursor-not-allowed">
+                    <div class="relative z-10 transition-transform group-hover:scale-105">
+                        <div class="w-12 h-12 bg-white bg-opacity-20 backdrop-blur-sm rounded-full flex items-center justify-center mx-auto mb-3">
+                            <i class="fas fa-plus text-white text-xl"></i>
+                        </div>
+                        <div class="text-white text-lg font-bold">创建礼簿</div>
+                    </div>
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            let selectedType = '';
+            let selectedOccasion = '';
+            
+            console.log('页面加载完成，开始初始化...');
+            
+            // 检查用户是否已登录
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.log('用户未登录，跳转到登录页');
+                window.location.href = 'P-LOGIN.html';
+                return;
+            }
+            console.log('用户token存在:', token.substring(0, 20) + '...');
+            
+            // 返回按钮点击事件
+            document.querySelector('#back-btn').addEventListener('click', function() {
+                window.location.href = 'P-LEDGER_LIST.html';
+            });
+            
+            // 礼簿类型选择
+            const typeOptions = document.querySelectorAll('[id^="type-option-"]');
+            console.log('找到类型选项数量:', typeOptions.length);
+            typeOptions.forEach(function(option) {
+                option.addEventListener('click', function() {
+                    // 移除所有选中状�?                    typeOptions.forEach(opt => {
+                        opt.classList.remove('selected');
+                        opt.querySelector('.w-3').classList.add('hidden');
+                        opt.querySelector('.w-6').classList.remove('border-primary');
+                        opt.querySelector('.w-6').classList.add('border-gray-300');
+                    });
+                    
+                    // 添加当前选中状�?                    this.classList.add('selected');
+                    this.querySelector('.w-3').classList.remove('hidden');
+                    this.querySelector('.w-6').classList.remove('border-gray-300');
+                    this.querySelector('.w-6').classList.add('border-primary');
+                    
+                    selectedType = this.dataset.type;
+                    updateCreateButton();
+                });
+            });
+            
+            // 事由选择
+            const occasionOptions = document.querySelectorAll('.radio-option[data-occasion]');
+            console.log('找到事由选项数量:', occasionOptions.length);
+            console.log('事由选项:', Array.from(occasionOptions).map(o => o.dataset.occasion));
+            
+            occasionOptions.forEach(function(option) {
+                console.log('为事由选项添加点击事件:', option.dataset.occasion);
+                option.addEventListener('click', function(e) {
+                    console.log('点击了事�?', this.dataset.occasion);
+                    e.stopPropagation();
+                    
+                    // 移除所有选中状�?                    occasionOptions.forEach(opt => {
+                        opt.classList.remove('selected');
+                    });
+                    
+                    // 添加当前选中状�?                    this.classList.add('selected');
+                    selectedOccasion = this.dataset.occasion;
+                    console.log('已选择事由:', selectedOccasion);
+                    updateCreateButton();
+                });
+            });
+            
+            // 礼簿名称输入
+            const ledgerNameInput = document.querySelector('#ledger-name');
+            const charCount = document.querySelector('#char-count');
+            
+            ledgerNameInput.addEventListener('input', function() {
+                const length = this.value.length;
+                charCount.textContent = length;
+                
+                // 字数超限提示
+                if (length > 18) {
+                    charCount.classList.add('text-danger');
+                } else {
+                    charCount.classList.remove('text-danger');
+                }
+                
+                updateCreateButton();
+            });
+            
+            // 更新创建按钮状�?            function updateCreateButton() {
+                const createBtn = document.querySelector('#create-btn');
+                const name = ledgerNameInput.value.trim();
+                
+                if (selectedType && selectedOccasion && name.length >= 2) {
+                    createBtn.disabled = false;
+                    createBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                } else {
+                    createBtn.disabled = true;
+                    createBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            }
+            
+            // 创建礼簿按钮点击事件
+            document.querySelector('#create-btn').addEventListener('click', async function() {
+                if (this.disabled) return;
+                
+                const ledgerName = ledgerNameInput.value.trim();
+                const token = localStorage.getItem('token');
+                
+                if (!token) {
+                    showToast('请先登录');
+                    setTimeout(() => {
+                        window.location.href = 'P-LOGIN.html';
+                    }, 1000);
+                    return;
+                }
+                
+                // 显示加载状�?                this.disabled = true;
+                const originalHTML = this.innerHTML;
+                this.innerHTML = `
+                    <div class="relative z-10">
+                        <div class="w-8 h-8 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                        <div class="text-white text-sm">创建�?..</div>
+                    </div>
+                `;
+                
+                try {
+                    // 定义API基础路径
+                    const hostname = window.location.hostname || 'localhost';
+            const protocol = (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:') ? 'http:' : window.location.protocol;
+            const overrideApiBase = localStorage.getItem('API_BASE_OVERRIDE');
+            const API_BASE = (overrideApiBase && overrideApiBase.trim()) ? overrideApiBase.replace(/\/+$/, '') : `${protocol}//${hostname}:3030/api`;
+
+                    console.log('发送创建请求到:', `${API_BASE}/ledgers`);
+                    console.log('请求数据:', {
+                        ledgerName,
+                        ledgerType: selectedType,
+                        occasion: selectedOccasion
+                    });
+                    
+                    // 调用后端API创建礼簿
+                    const response = await fetch(`${API_BASE}/ledgers`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            ledgerName: ledgerName,
+                            ledgerType: selectedType,
+                            occasion: selectedOccasion
+                        })
+                    });
+                    
+                    console.log('响应状�?', response.status, response.statusText);
+                    const result = await response.json();
+                    console.log('响应数据:', result);
+                    
+                    if (response.ok && result.success) {
+                        console.log('礼簿创建成功:', result.data);
+                        
+                        // 显示成功提示
+                        showToast('礼簿创建成功�?);
+                        
+                        // 跳转到礼簿详情页
+                        setTimeout(() => {
+                            window.location.href = `P-LEDGER_DETAIL.html?ledger_id=${result.data.id}`;
+                        }, 1000);
+                    } else {
+                        // 创建失败
+                        showToast(result.message || '创建失败，请重试');
+                        this.disabled = false;
+                        this.innerHTML = originalHTML;
+                    }
+                } catch (error) {
+                    console.error('创建礼簿失败:', error);
+                    showToast('网络错误，请检查后端服�?);
+                    this.disabled = false;
+                    this.innerHTML = originalHTML;
+                }
+            });
+            
+            // 显示提示信息
+            function showToast(message) {
+                const toast = document.createElement('div');
+                toast.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 bg-text-primary text-white px-4 py-2 rounded-lg shadow-lg z-50';
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.remove();
+                }, 2000);
+            }
+            
+            // 初始化按钮状�?            updateCreateButton();
+        });
+    </script>
+</body>
+</html>

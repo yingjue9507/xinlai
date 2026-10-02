@@ -1,0 +1,110 @@
+ <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试礼簿删除功能</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-case { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-case a { display: inline-block; margin: 5px 10px 5px 0; padding: 8px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 3px; }
+        .test-case a:hover { background: #0056b3; }
+        .success { color: #28a745; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .danger { color: #dc3545; font-weight: bold; }
+        .feature { margin: 10px 0; padding: 10px; background: #f8f9fa; border-left: 4px solid #007bff; }
+    </style>
+</head>
+<body>
+    <h1>礼簿长按删除功能测试</h1>
+    
+    <div class="test-case">
+        <h3>🎯 功能说明</h3>
+        <div class="feature">
+            <strong>长按删除礼簿功能</strong>：
+            <ul>
+                <li>📱 <strong>移动端</strong>：长按礼簿项800ms触发删除确认</li>
+                <li>🖱️ <strong>桌面端</strong>：鼠标左键长按800ms或右键点击触发删除确认</li>
+                <li>⚠️ <strong>安全提示</strong>：删除前会显示确认弹窗，提醒用户删除后无法恢复</li>
+                <li>🔄 <strong>自动刷新</strong>：删除成功后自动刷新礼簿列表</li>
+                <li>📳 <strong>震动反馈</strong>：移动端长按时提供震动反馈</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-case">
+        <h3>🧪 测试步骤</h3>
+        <div class="warning">
+            <strong>重要提醒</strong>：删除操作不可逆，请谨慎测试！建议先创建测试礼簿进行删除测试。
+        </div>
+        
+        <ol>
+            <li><a href="P-LEDGER_LIST.html" target="_blank">打开礼簿列表页面</a></li>
+            <li>确保已登录并有礼簿数据</li>
+            <li><strong>移动端测试</strong>：长按任意礼簿项800ms</li>
+            <li><strong>桌面端测试</strong>：鼠标左键长按800ms或右键点击</li>
+            <li>应该弹出删除确认对话框</li>
+            <li>点击"取消"应该关闭弹窗</li>
+            <li>点击"确定删除"应该删除礼簿（谨慎操作！）</li>
+        </ol>
+    </div>
+    
+    <div class="test-case">
+        <h3>✅ 预期行为</h3>
+        <div class="success">
+            <ul>
+                <li>长按时应该有视觉反馈（震动提示）</li>
+                <li>弹窗显示正确的礼簿名称</li>
+                <li>弹窗有明确的警告信息</li>
+                <li>取消按钮能正常关闭弹窗</li>
+                <li>删除成功后显示成功提示</li>
+                <li>列表自动刷新，删除的礼簿消失</li>
+                <li>统计数据自动更新</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-case">
+        <h3>⚠️ 注意事项</h3>
+        <div class="danger">
+            <ul>
+                <li><strong>数据安全</strong>：删除礼簿会同时删除所有相关记录，无法恢复</li>
+                <li><strong>网络要求</strong>：需要后端服务正常运行</li>
+                <li><strong>权限检查</strong>：只能删除自己创建的礼簿</li>
+                <li><strong>误操作防护</strong>：双重确认机制防止误删</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-case">
+        <h3>🔧 技术实现</h3>
+        <div class="feature">
+            <strong>核心功能实现</strong>：
+            <ul>
+                <li><strong>事件监听</strong>：touchstart/touchend（移动端）+ mousedown/mouseup（桌面端）</li>
+                <li><strong>长按检测</strong>：800ms定时器，支持touchmove取消</li>
+                <li><strong>UI反馈</strong>：删除确认弹窗 + 成功/错误提示</li>
+                <li><strong>API调用</strong>：DELETE /api/ledgers/{id}</li>
+                <li><strong>状态管理</strong>：删除后自动重新加载数据</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-case">
+        <h3>🚀 快速测试</h3>
+        <a href="P-CREATE_LEDGER.html" target="_blank">1. 先创建测试礼簿</a>
+        <a href="P-LEDGER_LIST.html" target="_blank">2. 测试删除功能</a>
+        <div class="warning">
+            建议创建一个名为"测试删除"的礼簿，然后测试删除功能，避免误删重要数据。
+        </div>
+    </div>
+    
+    <h2>💡 使用提示</h2>
+    <ul>
+        <li>长按操作在移动设备上更自然，桌面端也可以右键快速删除</li>
+        <li>删除确认弹窗点击背景也可以关闭</li>
+        <li>删除过程中会显示加载状态，请耐心等待</li>
+        <li>如果删除失败，会显示具体的错误信息</li>
+    </ul>
+</body>
+</html>

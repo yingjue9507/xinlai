@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心来 - 数据预览与修正</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#8B5CF6',
+                        tertiary: '#EC4899',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        info: '#06B6D4',
+                        'text-primary': '#1E293B',
+                        'text-secondary': '#64748B',
+                        'bg-primary': '#EEF2FF',
+                        'bg-secondary': '#F3E8FF',
+                        'card-bg': '#FFFFFF',
+                        'border-light': '#E2E8F0'
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        'primary-btn': '0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.2)'
+                    },
+                    borderRadius: {
+                        'xl': '0.75rem',
+                        '2xl': '1rem',
+                        '3xl': '1.5rem'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #EEF2FF 0%, #F3E8FF 100%);
+        }
+        
+        .primary-gradient {
+            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .primary-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .primary-gradient:hover::before {
+            opacity: 1;
+        }
+        
+        .status-bar {
+            background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+        }
+        
+        .cloud-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+        }
+        
+        .dynamic-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dynamic-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .safe-top {
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        .edit-form {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        
+        .edit-form.expanded {
+            max-height: 500px;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 28px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 28px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #3B82F6;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+<body class="gradient-bg cloud-pattern min-h-screen">
+    <!-- iOS状态栏 -->
+    <div id="status-bar" class="status-bar text-white text-sm flex justify-between items-center px-4 py-1 safe-top">
+        <div class="flex items-center space-x-1">
+            <span class="font-medium">9:41</span>
+        </div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-xs"></i>
+            <i class="fas fa-wifi text-xs"></i>
+            <div class="w-6 h-3 border border-white rounded-sm">
+                <div class="w-4 h-1.5 bg-white rounded-sm m-0.5"></div>
+            </div>
+        </div>
+    </div>
+    <!-- 主容器 -->
+    <div id="main-container" class="max-w-sm mx-auto bg-white min-h-screen relative">
+        <!-- 顶部导航栏 -->
+        <header id="top-header" class="bg-white px-4 py-3 border-b border-border-light">
+            <div id="header-content" class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <button id="back-btn" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition-all">
+                        <i class="fas fa-arrow-left text-gray-600"></i>
+                    </button>
+                    <h1 class="text-lg font-bold text-text-primary">数据预览与修正</h1>
+                </div>
+                <button id="complete-btn" class="px-4 py-2 primary-gradient text-white rounded-xl shadow-primary-btn hover:shadow-card transition-all">
+                    <span class="font-medium">完成导入</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main id="main-content" class="px-4 py-6 pb-8">
+            <!-- 导入信息卡片 -->
+            <div id="import-info-card" class="bg-white rounded-2xl shadow-card p-4 mb-6 dynamic-card">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center shadow-md">
+                            <i class="fas fa-file-excel text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-text-primary">导入数据</h3>
+                            <p class="text-sm text-text-secondary">共 <span id="total-count" class="font-medium text-primary">15</span> 条记录</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-sm text-text-secondary">已修正</div>
+                        <div class="text-lg font-bold text-success">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 数据表格 -->
+            <div id="data-table-container" class="bg-white rounded-2xl shadow-card overflow-hidden dynamic-card">
+                <!-- 表头 -->
+                <div id="table-header" class="bg-gray-50 px-4 py-3 border-b border-border-light">
+                    <div class="grid grid-cols-4 gap-2 text-sm font-medium text-text-secondary">
+                        <div class="col-span-2">姓名</div>
+                        <div class="text-right">金额</div>
+                        <div class="text-center">操作</div>
+                    </div>
+                </div>
+                
+                <!-- 数据行 -->
+                <div id="data-rows" class="divide-y divide-border-light">
+                    <!-- 数据行会通过JavaScript动态生成 -->
+                </div>
+            </div>
+
+            <!-- 编辑表单模板 -->
+            <div id="edit-form-template" class="hidden">
+                <div class="edit-form bg-gray-50 p-4 border-t border-border-light">
+                    <div class="grid grid-cols-1 gap-4">
+                        <!-- 姓名 -->
+                        <div>
+                            <label class="block text-sm font-medium text-text-secondary mb-2">姓名</label>
+                            <input type="text" class="name-input w-full px-3 py-2 border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" value="">
+                        </div>
+                        
+                        <!-- 金额和非礼金开关 -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-text-secondary mb-2">金额</label>
+                                <input type="number" class="amount-input w-full px-3 py-2 border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" value="">
+                            </div>
+                            <div class="flex items-end">
+                                <label class="block text-sm font-medium text-text-secondary mb-2">非礼金</label>
+                                <label class="switch ml-2">
+                                    <input type="checkbox" class="non-money-switch">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- 物品描述 -->
+                        <div class="gift-description-container hidden">
+                            <label class="block text-sm font-medium text-text-secondary mb-2">物品描述</label>
+                            <input type="text" class="gift-description-input w-full px-3 py-2 border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="请输入物品描述">
+                        </div>
+                        
+                        <!-- 备注 -->
+                        <div>
+                            <label class="block text-sm font-medium text-text-secondary mb-2">备注</label>
+                            <input type="text" class="note-input w-full px-3 py-2 border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" placeholder="选填">
+                        </div>
+                        
+                        <!-- 日期 -->
+                        <div>
+                            <label class="block text-sm font-medium text-text-secondary mb-2">日期</label>
+                            <input type="date" class="date-input w-full px-3 py-2 border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent" value="">
+                        </div>
+                        
+                        <!-- 操作按钮 -->
+                        <div class="flex space-x-3 pt-2">
+                            <button type="button" class="cancel-edit-btn flex-1 py-2 px-4 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors">
+                                取消
+                            </button>
+                            <button type="button" class="save-edit-btn flex-1 py-2 px-4 primary-gradient text-white rounded-lg font-medium hover:shadow-card transition-all">
+                                保存
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 模拟从Excel导入的数据
+        const mockExcelData = [
+            { id: 1, name: "张三", amount: 500, note: "同事", date: "2024-01-15", isGift: false, giftDescription: "" },
+            { id: 2, name: "李四", amount: 200, note: "朋友", date: "2024-01-15", isGift: false, giftDescription: "" },
+            { id: 3, name: "王五", amount: 800, note: "亲戚", date: "2024-01-15", isGift: false, giftDescription: "" },
+            { id: 4, name: "赵六", amount: 300, note: "同学", date: "2024-01-15", isGift: false, giftDescription: "" },
+            { id: 5, name: "孙七", amount: 1000, note: "邻居", date: "2024-01-15", isGift: false, giftDescription: "" },
+            { id: 6, name: "周八", amount: 600, note: "客户", date: "2024-01-15", isGift: false, giftDescription: "" },
+            { id: 7, name: "吴九", amount: 400, note: "合作伙伴", date: "2024-01-15", isGift: false, giftDescription: "" },
+            { id: 8, name: "郑十", amount: 0, note: "朋友", date: "2024-01-15", isGift: true, giftDescription: "精美茶具一套" },
+            { id: 9, name: "钱十一", amount: 700, note: "远房亲戚", date: "2024-01-15", isGift: false, giftDescription: "" },
+            { id: 10, name: "孙十二", amount: 900, note: "大学同学", date: "2024-01-15", isGift: false, giftDescription: "" },
+            { id: 11, name: "李十三", amount: 0, note: "同事", date: "2024-01-15", isGift: true, giftDescription: "红酒两瓶" },
+            { id: 12, name: "周十四", amount: 500, note: "高中同学", date: "2024-01-15", isGift: false, giftDescription: "" },
+            { id: 13, name: "吴十五", amount: 300, note: "邻居", date: "2024-01-15", isGift: false, giftDescription: "" },
+            { id: 14, name: "郑十六", amount: 800, note: "亲戚", date: "2024-01-15", isGift: false, giftDescription: "" },
+            { id: 15, name: "王十七", amount: 0, note: "朋友", date: "2024-01-15", isGift: true, giftDescription: "水果篮一个" }
+        ];
+
+        let currentEditingRow = null;
+        let correctedCount = 0;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // 解析URL参数
+            function getUrlParams() {
+                const params = {};
+                const queryString = window.location.search.substring(1);
+                const urlParams = new URLSearchParams(queryString);
+                
+                for(const [key, value] of urlParams.entries()) {
+                    params[key] = value;
+                }
+                return params;
+            }
+
+            const params = getUrlParams();
+            const ledgerId = params.ledger_id || 'default_ledger';
+
+            // 渲染数据表格
+            function renderDataTable() {
+                const dataRowsContainer = document.querySelector('#data-rows');
+                dataRowsContainer.innerHTML = '';
+
+                mockExcelData.forEach(function(rowData, index) {
+                    const rowElement = createDataRow(rowData, index);
+                    dataRowsContainer.appendChild(rowElement);
+                });
+
+                updateTotalCount();
+            }
+
+            // 创建数据行
+            function createDataRow(rowData, index) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'data-row px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer';
+                rowDiv.dataset.rowId = rowData.id;
+
+                const amountDisplay = rowData.isGift ? 
+                    `<span class="text-text-secondary">${rowData.giftDescription}</span>` : 
+                    `<span class="font-bold text-primary">¥${rowData.amount}</span>`;
+
+                rowDiv.innerHTML = `
+                    <div class="grid grid-cols-4 gap-2 items-center">
+                        <div class="col-span-2">
+                            <div class="font-medium text-text-primary">${rowData.name}</div>
+                            <div class="text-sm text-text-secondary">${rowData.note}</div>
+                        </div>
+                        <div class="text-right">
+                            ${amountDisplay}
+                        </div>
+                        <div class="text-center">
+                            <button class="edit-row-btn w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center hover:bg-primary hover:text-white transition-all">
+                                <i class="fas fa-edit text-sm"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+
+                // 添加点击事件
+                rowDiv.addEventListener('click', function(e) {
+                    if (!e.target.closest('.edit-row-btn')) {
+                        toggleEditForm(rowDiv, rowData, index);
+                    }
+                });
+
+                // 编辑按钮点击事件
+                const editBtn = rowDiv.querySelector('.edit-row-btn');
+                editBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    toggleEditForm(rowDiv, rowData, index);
+                });
+
+                return rowDiv;
+            }
+
+            // 切换编辑表单
+            function toggleEditForm(rowElement, rowData, index) {
+                // 如果当前有其他行在编辑，先关闭
+                if (currentEditingRow && currentEditingRow !== rowElement) {
+                    closeEditForm(currentEditingRow);
+                }
+
+                const editForm = rowElement.querySelector('.edit-form');
+                if (editForm) {
+                    closeEditForm(rowElement);
+                } else {
+                    openEditForm(rowElement, rowData, index);
+                }
+            }
+
+            // 打开编辑表单
+            function openEditForm(rowElement, rowData, index) {
+                const editFormTemplate = document.querySelector('#edit-form-template .edit-form');
+                const editFormClone = editFormTemplate.cloneNode(true);
+                
+                // 填充表单数据
+                editFormClone.querySelector('.name-input').value = rowData.name;
+                editFormClone.querySelector('.amount-input').value = rowData.amount;
+                editFormClone.querySelector('.note-input').value = rowData.note;
+                editFormClone.querySelector('.date-input').value = rowData.date;
+                editFormClone.querySelector('.gift-description-input').value = rowData.giftDescription;
+                
+                const nonMoneySwitch = editFormClone.querySelector('.non-money-switch');
+                const giftDescriptionContainer = editFormClone.querySelector('.gift-description-container');
+                
+                nonMoneySwitch.checked = rowData.isGift;
+                if (rowData.isGift) {
+                    giftDescriptionContainer.classList.remove('hidden');
+                }
+
+                // 添加非礼金开关事件
+                nonMoneySwitch.addEventListener('change', function() {
+                    if (this.checked) {
+                        giftDescriptionContainer.classList.remove('hidden');
+                    } else {
+                        giftDescriptionContainer.classList.add('hidden');
+                    }
+                });
+
+                // 添加取消按钮事件
+                const cancelBtn = editFormClone.querySelector('.cancel-edit-btn');
+                cancelBtn.addEventListener('click', function() {
+                    closeEditForm(rowElement);
+                });
+
+                // 添加保存按钮事件
+                const saveBtn = editFormClone.querySelector('.save-edit-btn');
+                saveBtn.addEventListener('click', function() {
+                    saveRowData(rowElement, rowData, index, editFormClone);
+                });
+
+                rowElement.appendChild(editFormClone);
+                
+                // 展开动画
+                setTimeout(function() {
+                    editFormClone.classList.add('expanded');
+                }, 10);
+
+                currentEditingRow = rowElement;
+            }
+
+            // 关闭编辑表单
+            function closeEditForm(rowElement) {
+                const editForm = rowElement.querySelector('.edit-form');
+                if (editForm) {
+                    editForm.classList.remove('expanded');
+                    setTimeout(function() {
+                        editForm.remove();
+                    }, 300);
+                }
+                if (currentEditingRow === rowElement) {
+                    currentEditingRow = null;
+                }
+            }
+
+            // 保存行数据
+            function saveRowData(rowElement, rowData, index, editForm) {
+                const nameInput = editForm.querySelector('.name-input');
+                const amountInput = editForm.querySelector('.amount-input');
+                const noteInput = editForm.querySelector('.note-input');
+                const dateInput = editForm.querySelector('.date-input');
+                const nonMoneySwitch = editForm.querySelector('.non-money-switch');
+                const giftDescriptionInput = editForm.querySelector('.gift-description-input');
+
+                // 验证必填字段
+                if (!nameInput.value.trim()) {
+                    alert('请输入姓名');
+                    nameInput.focus();
+                    return;
+                }
+
+                if (!nonMoneySwitch.checked && (!amountInput.value || amountInput.value <= 0)) {
+                    alert('请输入有效的金额');
+                    amountInput.focus();
+                    return;
+                }
+
+                if (nonMoneySwitch.checked && !giftDescriptionInput.value.trim()) {
+                    alert('请输入物品描述');
+                    giftDescriptionInput.focus();
+                    return;
+                }
+
+                // 更新数据
+                const oldData = { ...rowData };
+                rowData.name = nameInput.value.trim();
+                rowData.amount = nonMoneySwitch.checked ? 0 : parseFloat(amountInput.value);
+                rowData.note = noteInput.value.trim();
+                rowData.date = dateInput.value;
+                rowData.isGift = nonMoneySwitch.checked;
+                rowData.giftDescription = nonMoneySwitch.checked ? giftDescriptionInput.value.trim() : '';
+
+                // 更新行显示
+                updateRowDisplay(rowElement, rowData);
+
+                // 关闭编辑表单
+                closeEditForm(rowElement);
+
+                // 标记为已修正
+                if (!rowData.corrected) {
+                    rowData.corrected = true;
+                    correctedCount++;
+                    updateCorrectedCount();
+                }
+
+                console.log('数据已更新:', rowData);
+            }
+
+            // 更新行显示
+            function updateRowDisplay(rowElement, rowData) {
+                const nameCell = rowElement.querySelector('.font-medium.text-text-primary');
+                const noteCell = rowElement.querySelector('.text-sm.text-text-secondary');
+                const amountCell = rowElement.querySelector('.col-span-4 .text-right');
+
+                nameCell.textContent = rowData.name;
+                noteCell.textContent = rowData.note;
+
+                const amountDisplay = rowData.isGift ? 
+                    `<span class="text-text-secondary">${rowData.giftDescription}</span>` : 
+                    `<span class="font-bold text-primary">¥${rowData.amount}</span>`;
+                amountCell.innerHTML = amountDisplay;
+            }
+
+            // 更新总数显示
+            function updateTotalCount() {
+                document.querySelector('#total-count').textContent = mockExcelData.length;
+            }
+
+            // 更新已修正数量
+            function updateCorrectedCount() {
+                const correctedElement = document.querySelector('#import-info-card .text-lg.font-bold.text-success');
+                correctedElement.textContent = correctedCount;
+            }
+
+            // 返回按钮事件
+            document.querySelector('#back-btn').addEventListener('click', function() {
+                window.location.href = `P-EXCEL_IMPORT.html?ledger_id=${ledgerId}`;
+            });
+
+            // 完成导入按钮事件
+            document.querySelector('#complete-btn').addEventListener('click', function() {
+                // 显示加载状态
+                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>导入中...';
+                this.disabled = true;
+
+                // 模拟导入过程
+                setTimeout(function() {
+                    console.log('Excel数据导入完成:', mockExcelData);
+                    
+                    // 显示成功提示
+                    alert('数据导入成功！');
+                    
+                    // 跳转到礼簿详情页
+                    window.location.href = `P-LEDGER_DETAIL.html?ledger_id=${ledgerId}`;
+                }, 2000);
+            });
+
+            // 初始化页面
+            renderDataTable();
+        });
+    </script>
+</body>
+</html>

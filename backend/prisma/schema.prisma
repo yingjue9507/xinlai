@@ -1,0 +1,157 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  phoneNumber     String   @unique @map("phone_number") @db.VarChar(20)
+  password        String?  @map("password") @db.VarChar(255)
+  registrationDate DateTime @default(now()) @map("registration_date")
+  lastLoginDate   DateTime @default(now()) @map("last_login_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  ledgers         Ledger[]
+  contacts        Contact[]
+  massSendLogs    MassSendLog[]
+  announcements   Announcement[]
+
+  @@map("users")
+}
+
+model Ledger {
+  id             String   @id @default(uuid()) @db.VarChar(36)
+  userId         String   @map("user_id") @db.VarChar(36)
+  ledgerName     String   @map("ledger_name") @db.VarChar(100)
+  ledgerType     String   @map("ledger_type") @db.VarChar(50)
+  occasion       String   @db.VarChar(100)
+  creationDate   DateTime @default(now()) @map("creation_date")
+  lastUpdateDate DateTime @updatedAt @map("last_update_date")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  records        Record[]
+  massSendLogs   MassSendLog[]
+
+  @@index([userId])
+  @@map("ledgers")
+}
+
+model Record {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  ledgerId        String   @map("ledger_id") @db.VarChar(36)
+  contactName     String   @map("contact_name") @db.VarChar(100)
+  amount          Float    @default(0)
+  isGiftItem      Boolean  @default(false) @map("is_gift_item")
+  giftDescription String?  @map("gift_description") @db.VarChar(255)
+  note            String?  @db.VarChar(500)
+  recordDate      DateTime @map("record_date")
+  recordType      String @default("received") @map("record_type") @db.VarChar(20)
+  creationDate    DateTime @default(now()) @map("creation_date")
+  lastUpdateDate  DateTime @updatedAt @map("last_update_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  ledger          Ledger   @relation(fields: [ledgerId], references: [id], onDelete: Cascade)
+
+  @@index([ledgerId])
+  @@index([contactName])
+  @@index([recordType])
+  @@map("records")
+}
+
+model Contact {
+  id              String   @id @default(uuid()) @db.VarChar(36)
+  userId          String   @map("user_id") @db.VarChar(36)
+  contactName     String   @map("contact_name") @db.VarChar(100)
+  phoneNumber     String?  @map("phone_number") @db.VarChar(20)
+  totalReceived   Float    @default(0) @map("total_received")
+  totalGiven      Float    @default(0) @map("total_given")
+  lastContactDate DateTime @default(now()) @map("last_contact_date")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contactName])
+  @@index([userId])
+  @@map("contacts")
+}
+
+model NotificationTemplate {
+  id              String   @id @default(uuid())
+  templateName    String   @map("template_name")
+  templateContent String   @map("template_content")
+  templateType    String   @map("template_type")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("notification_templates")
+}
+
+model MassSendLog {
+  id                    String   @id @default(uuid())
+  userId                String   @map("user_id")
+  ledgerId              String?  @map("ledger_id")
+  sendTime              DateTime @default(now()) @map("send_time")
+  recipientCount        Int      @map("recipient_count")
+  messageContentSummary String   @map("message_content_summary")
+  status                String   @default("success")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ledger                Ledger?  @relation(fields: [ledgerId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("mass_send_logs")
+}
+
+model Announcement {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  title       String   // 公告标题
+  content     String   // 公告内容
+  eventType   String   @map("event_type") // 事件类型：红事、白事
+  eventDate   DateTime @map("event_date") // 事件日期
+  location    String?  // 地点
+  contactInfo String?  @map("contact_info") // 联系方式
+  isActive    Boolean  @default(true) @map("is_active") // 是否激活显示
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([isActive])
+  @@index([eventDate])
+  @@index([createdAt])
+  @@map("announcements")
+}
+
+model AdminUser {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  username  String   @unique @db.VarChar(50)
+  password  String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("a_users")
+}
+
+model SystemAnnouncement {
+  id        String   @id @default(uuid()) @db.VarChar(36)
+  title     String   @db.VarChar(100)
+  content   String   @db.Text
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("system_announcements")
+}

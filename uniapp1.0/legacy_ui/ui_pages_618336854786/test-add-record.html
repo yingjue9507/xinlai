@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试添加记录功能</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-case { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .test-link { display: inline-block; margin: 10px 0; padding: 10px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; }
+        .test-link:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h1>添加记录功能测试</h1>
+    
+    <div class="test-case">
+        <h3>测试1: 从"我办事"礼簿添加收到记录</h3>
+        <p>应该显示当前礼簿信息，并预选"收到"类型</p>
+        <a href="P-ADD_RECORD.html?ledger_id=92cb1431-229b-4509-b1ac-d5ef107dab12" class="test-link" target="_blank">
+            测试收到记录
+        </a>
+    </div>
+    
+    <div class="test-case">
+        <h3>测试2: 从"参加别人的事"礼簿添加送出记录</h3>
+        <p>应该显示当前礼簿信息，并预选"送出"类型</p>
+        <a href="P-ADD_RECORD.html?ledger_id=64be9669-0085-43f8-8e60-11aa5b91c0c3" class="test-link" target="_blank">
+            测试送出记录
+        </a>
+    </div>
+    
+    <div class="test-case">
+        <h3>测试3: 类型不匹配</h3>
+        <p>在"我办事"礼簿中选择"送出"类型，应该创建新礼簿</p>
+        <a href="P-ADD_RECORD.html?ledger_id=92cb1431-229b-4509-b1ac-d5ef107dab12" class="test-link" target="_blank">
+            测试类型不匹配
+        </a>
+        <p><small>在页面中选择"送出"类型，然后保存</small></p>
+    </div>
+    
+    <div class="test-case">
+        <h3>测试4: 无礼簿ID</h3>
+        <p>直接访问添加记录页面，应该根据选择的类型创建新礼簿</p>
+        <a href="P-ADD_RECORD.html" class="test-link" target="_blank">
+            测试无礼簿ID
+        </a>
+    </div>
+    
+    <div class="test-case">
+        <h3>测试5: 从联系人页面添加</h3>
+        <p>应该预填联系人姓名</p>
+        <a href="P-ADD_RECORD.html?contactName=王二麻" class="test-link" target="_blank">
+            测试联系人预填
+        </a>
+    </div>
+    
+    <h2>预期行为</h2>
+    <ul>
+        <li><strong>有礼簿ID + 类型匹配</strong>：使用当前礼簿，显示礼簿信息</li>
+        <li><strong>有礼簿ID + 类型不匹配</strong>：创建新的对应类型礼簿</li>
+        <li><strong>无礼簿ID</strong>：根据选择的记录类型创建新礼簿</li>
+        <li><strong>联系人预填</strong>：自动填入联系人姓名</li>
+    </ul>
+</body>
+</html>

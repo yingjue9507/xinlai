@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>心来 - 添加记录</title>
+    <script src="https://unpkg.byted-static.com/coze/space_ppt_lib/1.0.3-alpha.12/lib/tailwindcss.js"></script>
+    <script src="https://unpkg.byted-static.com/fortawesome/fontawesome-free/6.7.2/js/all.min.js" data-auto-replace-svg="nest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        secondary: '#8B5CF6',
+                        tertiary: '#EC4899',
+                        success: '#10B981',
+                        danger: '#EF4444',
+                        info: '#06B6D4',
+                        'text-primary': '#1E293B',
+                        'text-secondary': '#64748B',
+                        'bg-primary': '#EEF2FF',
+                        'bg-secondary': '#F3E8FF',
+                        'card-bg': '#FFFFFF',
+                        'border-light': '#E2E8F0'
+                    },
+                    boxShadow: {
+                        'card': '0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.03)',
+                        'card-hover': '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                        'primary-btn': '0 10px 15px -3px rgba(59, 130, 246, 0.3), 0 4px 6px -2px rgba(59, 130, 246, 0.2)'
+                    },
+                    borderRadius: {
+                        'xl': '0.75rem',
+                        '2xl': '1rem',
+                        '3xl': '1.5rem'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #EEF2FF 0%, #F3E8FF 100%);
+        }
+        
+        .primary-gradient {
+            background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .primary-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0.1) 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .primary-gradient:hover::before {
+            opacity: 1;
+        }
+        
+        .status-bar {
+            background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
+        }
+        
+        .cloud-pattern {
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+        }
+        
+        .form-input-focus:focus {
+            outline: none;
+            border-color: theme('colors.primary');
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 28px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 28px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: theme('colors.primary');
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(22px);
+        }
+        
+        .safe-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
+        .safe-top {
+            padding-top: env(safe-area-inset-top);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="gradient-bg cloud-pattern min-h-screen">
+    <!-- iOS状态栏 -->
+    <div id="status-bar" class="status-bar text-white text-sm flex justify-between items-center px-4 py-1 safe-top">
+        <div class="flex items-center space-x-1">
+            <span class="font-medium">9:41</span>
+        </div>
+        <div class="flex items-center space-x-1">
+            <i class="fas fa-signal text-xs"></i>
+            <i class="fas fa-wifi text-xs"></i>
+            <div class="w-6 h-3 border border-white rounded-sm">
+                <div class="w-4 h-1.5 bg-white rounded-sm m-0.5"></div>
+            </div>
+        </div>
+    </div>
+    <!-- 主容�?-->
+    <div id="main-container" class="max-w-sm mx-auto bg-white min-h-screen">
+        <!-- 顶部导航�?-->
+        <header id="top-header" class="bg-white px-4 py-3 border-b border-border-light">
+            <div id="header-content" class="flex items-center justify-between">
+                <button id="back-btn" class="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center shadow-sm hover:shadow-md transition-all">
+                    <i class="fas fa-arrow-left text-gray-600"></i>
+                </button>
+                <h1 id="page-title" class="text-lg font-bold text-text-primary">添加往来记�?/h1>
+                <button id="save-btn" class="px-4 py-2 bg-gray-100 text-gray-400 rounded-xl font-medium transition-all disabled:opacity-50" disabled>
+                    保存
+                </button>
+            </div>
+        </header>
+        
+        <!-- 主要内容区域 -->
+        <main id="main-content" class="px-4 py-6">
+            <!-- 添加记录表单 -->
+            <form id="add-record-form" class="space-y-6">
+
+                <!-- 记录类型选择 -->
+                <div id="record-type-section" class="space-y-4">
+                    <div class="space-y-2">
+                        <label class="block text-sm font-medium text-text-primary">
+                            记录类型 <span class="text-danger">*</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-3">
+                            <!-- 收到的选项 -->
+                            <button 
+                                type="button"
+                                id="record-type-received" 
+                                class="record-type-btn p-4 rounded-2xl border-2 border-success bg-success/5 transition-all hover:shadow-md"
+                                data-type="received"
+                            >
+                                <div class="flex flex-col items-center space-y-2">
+                                    <div class="w-10 h-10 bg-success rounded-full flex items-center justify-center">
+                                        <i class="fas fa-arrow-down text-white text-lg"></i>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="font-medium text-success">收到</div>
+                                        <div class="text-xs text-text-secondary mt-1">我收到的礼金</div>
+                                    </div>
+                                </div>
+                            </button>
+                            
+                            <!-- 送出的选项 -->
+                            <button 
+                                type="button"
+                                id="record-type-sent" 
+                                class="record-type-btn p-4 rounded-2xl border-2 border-danger bg-danger/5 transition-all hover:shadow-md"
+                                data-type="sent"
+                            >
+                                <div class="flex flex-col items-center space-y-2">
+                                    <div class="w-10 h-10 bg-danger rounded-full flex items-center justify-center">
+                                        <i class="fas fa-arrow-up text-white text-lg"></i>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="font-medium text-danger">送出</div>
+                                        <div class="text-xs text-text-secondary mt-1">我送出的礼�?/div>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 当前礼簿信息 -->
+                <div id="current-ledger-info" class="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-book text-blue-600"></i>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-blue-900">当前礼簿</div>
+                                <div id="current-ledger-name" class="text-lg font-semibold text-blue-700">
+                                    正在获取...
+                                </div>
+                            </div>
+                        </div>
+                        <div id="ledger-type-badge" class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                            --
+                        </div>
+                    </div>
+                    <div id="ledger-hint" class="mt-2 text-xs text-blue-600">
+                        系统将根据您选择的记录类型自动匹配合适的礼簿
+                    </div>
+                </div>
+
+                <!-- 基本信息 -->
+                <div id="basic-info-section" class="space-y-4">
+                    <div class="space-y-2">
+                        <label for="contact-name" class="block text-sm font-medium text-text-primary">
+                            姓名 <span class="text-danger">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="contact-name" 
+                            name="contact-name" 
+                            class="w-full px-4 py-3 border border-border-light rounded-2xl form-input-focus bg-white shadow-sm" 
+                            placeholder="请输入联系人姓名"
+                            required
+                        >
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="amount" class="block text-sm font-medium text-text-primary">
+                            金额 <span class="text-danger">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute left-4 top-1/2 transform -translate-y-1/2 text-text-secondary">¥</span>
+                            <input 
+                                type="number" 
+                                id="amount" 
+                                name="amount" 
+                                class="w-full pl-8 pr-4 py-3 border border-border-light rounded-2xl form-input-focus bg-white shadow-sm" 
+                                placeholder="0.00"
+                                step="0.01"
+                                min="0"
+                                required
+                            >
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label for="record-date" class="block text-sm font-medium text-text-primary">
+                            日期 <span class="text-danger">*</span>
+                        </label>
+                        <input 
+                            type="date" 
+                            id="record-date" 
+                            name="record-date" 
+                            class="w-full px-4 py-3 border border-border-light rounded-2xl form-input-focus bg-white shadow-sm" 
+                            required
+                        >
+                    </div>
+                </div>
+                
+                <!-- 非礼金物品设�?-->
+                <div id="gift-item-section" class="space-y-4">
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-2xl">
+                        <div>
+                            <h3 class="text-sm font-medium text-text-primary">非礼金物�?/h3>
+                            <p class="text-xs text-text-secondary mt-1">记录礼品、物品等非现金往�?/p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="is-gift-item">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div id="gift-description-container" class="space-y-2 hidden">
+                        <label for="gift-description" class="block text-sm font-medium text-text-primary">
+                            物品描述 <span class="text-danger">*</span>
+                        </label>
+                        <textarea 
+                            id="gift-description" 
+                            name="gift-description" 
+                            rows="3"
+                            class="w-full px-4 py-3 border border-border-light rounded-2xl form-input-focus bg-white shadow-sm resize-none" 
+                            placeholder="请描述物品名称、数量等信息"
+                        ></textarea>
+                    </div>
+                </div>
+                
+                <!-- 备注信息 -->
+                <div id="note-section" class="space-y-2">
+                    <label for="note" class="block text-sm font-medium text-text-primary">
+                        备注
+                    </label>
+                    <textarea 
+                        id="note" 
+                        name="note" 
+                        rows="3"
+                        class="w-full px-4 py-3 border border-border-light rounded-2xl form-input-focus bg-white shadow-sm resize-none" 
+                        placeholder="添加备注信息（可选）"
+                    ></textarea>
+                </div>
+                
+                <!-- 快捷操作 -->
+                <div id="quick-actions" class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-text-primary">快捷金额</span>
+                        <div class="flex space-x-2">
+                            <button type="button" class="quick-amount-btn px-3 py-2 bg-gray-100 text-text-primary rounded-xl text-sm font-medium hover:bg-primary hover:text-white transition-all" data-amount="200">200</button>
+                            <button type="button" class="quick-amount-btn px-3 py-2 bg-gray-100 text-text-primary rounded-xl text-sm font-medium hover:bg-primary hover:text-white transition-all" data-amount="500">500</button>
+                            <button type="button" class="quick-amount-btn px-3 py-2 bg-gray-100 text-text-primary rounded-xl text-sm font-medium hover:bg-primary hover:text-white transition-all" data-amount="1000">1000</button>
+                            <button type="button" class="quick-amount-btn px-3 py-2 bg-gray-100 text-text-primary rounded-xl text-sm font-medium hover:bg-primary hover:text-white transition-all" data-amount="2000">2000</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取URL参数
+            function getUrlParams() {
+                const params = {};
+                const queryString = window.location.search.substring(1);
+                const urlParams = new URLSearchParams(queryString);
+                
+                for(const [key, value] of urlParams.entries()) {
+                    params[key] = value;
+                }
+                return params;
+            }
+            
+            // 更新礼簿信息显示
+            async function updateLedgerInfo(recordType) {
+                const ledgerNameEl = document.getElementById('current-ledger-name');
+                const ledgerTypeEl = document.getElementById('ledger-type-badge');
+                const ledgerHintEl = document.getElementById('ledger-hint');
+                
+                if (!recordType) {
+                    ledgerNameEl.textContent = '请先选择记录类型';
+                    ledgerTypeEl.textContent = '--';
+                    ledgerTypeEl.className = 'px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-sm font-medium';
+                    ledgerHintEl.textContent = '请选择"收到"�?送出"类型';
+                    return;
+                }
+                
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        ledgerNameEl.textContent = '请先登录';
+                        return;
+                    }
+                    
+                    // 定义API基础路径
+                    const hostname = window.location.hostname || 'localhost';
+                    const protocol = (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:') ? 'http:' : window.location.protocol;
+                    const overrideApiBase = localStorage.getItem('API_BASE_OVERRIDE');
+                    const API_BASE = (overrideApiBase && overrideApiBase.trim()) ? overrideApiBase.replace(/\/+$/, '') : `${protocol}//${hostname}:3030/api`;
+
+                    // 获取礼簿列表
+                    const ledgersResponse = await fetch(`${API_BASE}/ledgers`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (ledgersResponse.ok) {
+                        const ledgersResult = await ledgersResponse.json();
+                        if (ledgersResult.data && ledgersResult.data.length > 0) {
+                            // 根据记录类型选择合适的礼簿
+                            const expectedType = (recordType === 'received') ? '我办�? : '参加别人的事';
+                            const suitableLedger = ledgersResult.data.find(ledger => ledger.type === expectedType);
+                            
+                            let selectedLedger;
+                            if (suitableLedger) {
+                                selectedLedger = suitableLedger;
+                                ledgerHintEl.textContent = `已为您选择${expectedType}类型的礼簿`;
+                            } else {
+                                selectedLedger = ledgersResult.data[0];
+                                ledgerHintEl.textContent = `注意：没�?{expectedType}类型的礼簿，将使�?${selectedLedger.name}"`;
+                            }
+                            
+                            // 更新显示
+                            ledgerNameEl.textContent = selectedLedger.name;
+                            ledgerTypeEl.textContent = selectedLedger.type;
+                            
+                            // 根据礼簿类型设置不同的颜�?                            if (selectedLedger.type === '我办�?) {
+                                ledgerTypeEl.className = 'px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium';
+                            } else {
+                                ledgerTypeEl.className = 'px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium';
+                            }
+                            
+                            console.log('礼簿信息已更�?', selectedLedger);
+                        } else {
+                            ledgerNameEl.textContent = '暂无礼簿';
+                            ledgerTypeEl.textContent = '--';
+                            ledgerHintEl.textContent = '请先创建礼簿';
+                        }
+                    } else {
+                        throw new Error('获取礼簿列表失败');
+                    }
+                } catch (error) {
+                    console.error('更新礼簿信息失败:', error);
+                    ledgerNameEl.textContent = '获取失败';
+                    ledgerTypeEl.textContent = '--';
+                    ledgerHintEl.textContent = '请检查网络连�?;
+                }
+            }
+            
+            // 加载指定礼簿的信�?            async function loadLedgerInfo(ledgerId) {
+                const ledgerNameEl = document.getElementById('current-ledger-name');
+                const ledgerTypeEl = document.getElementById('ledger-type-badge');
+                const ledgerHintEl = document.getElementById('ledger-hint');
+                
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        ledgerNameEl.textContent = '请先登录';
+                        return;
+                    }
+                    
+                    // 定义API基础路径
+                    const hostname = window.location.hostname || 'localhost';
+                    const protocol = (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:') ? 'http:' : window.location.protocol;
+                    const overrideApiBase2 = localStorage.getItem('API_BASE_OVERRIDE');
+                    const API_BASE = (overrideApiBase2 && overrideApiBase2.trim()) ? overrideApiBase2.replace(/\/+$/, '') : `${protocol}//${hostname}:3030/api`;
+
+                    // 获取礼簿详情
+                    const ledgerResponse = await fetch(`${API_BASE}/ledgers/${ledgerId}`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    
+                    if (ledgerResponse.ok) {
+                        const result = await ledgerResponse.json();
+                        if (result.success && result.data) {
+                            const ledger = result.data;
+                            
+                            // 更新显示
+                            ledgerNameEl.textContent = ledger.name || ledger.ledgerName;
+                            ledgerTypeEl.textContent = ledger.type || ledger.ledgerType;
+                            ledgerHintEl.textContent = '正在使用指定的礼�?;
+                            
+                            // 根据礼簿类型设置颜色
+                            if ((ledger.type || ledger.ledgerType) === '我办�?) {
+                                ledgerTypeEl.className = 'px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium';
+                            } else {
+                                ledgerTypeEl.className = 'px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium';
+                            }
+                            
+                            // 根据礼簿类型自动选择对应的记录类�?                            const expectedRecordType = (ledger.type || ledger.ledgerType) === '我办�? ? 'received' : 'sent';
+                            const recordTypeBtn = document.querySelector(`[data-type="${expectedRecordType}"]`);
+                            if (recordTypeBtn) {
+                                recordTypeBtn.click();
+                            }
+                            
+                            console.log('已加载指定礼�?', ledger);
+                        } else {
+                            throw new Error('礼簿不存�?);
+                        }
+                    } else {
+                        throw new Error('获取礼簿详情失败');
+                    }
+                } catch (error) {
+                    console.error('加载礼簿信息失败:', error);
+                    ledgerNameEl.textContent = '礼簿不存�?;
+                    ledgerTypeEl.textContent = '--';
+                    ledgerHintEl.textContent = '请从礼簿列表重新进入';
+                }
+            }
+            
+            const params = getUrlParams();
+            const ledgerId = params.ledger_id || 'default';
+            
+            // 设置默认日期为今�?            const today = new Date().toISOString().split('T')[0];
+            document.querySelector('#record-date').value = today;
+            
+            // 如果URL中有联系人信息，预填到表单中
+            if (params.contactName) {
+                document.querySelector('#contact-name').value = decodeURIComponent(params.contactName);
+                console.log('预填联系人姓�?', params.contactName);
+            }
+            
+            // 当前选中的记录类�?            let selectedRecordType = null;
+            
+            // 验证是否有礼簿ID
+            if (!ledgerId || ledgerId === 'default') {
+                // 没有礼簿ID时，尝试自动获取礼簿
+                console.log('未传递礼簿ID，将在保存时自动选择合适的礼簿');
+                // 初始化礼簿信息显�?                updateLedgerInfo(null);
+            } else {
+                // 有礼簿ID时，获取并显示礼簿信�?                loadLedgerInfo(ledgerId);
+            }
+
+            // 记录类型选择按钮事件
+            const recordTypeBtns = document.querySelectorAll('.record-type-btn');
+            recordTypeBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    // 移除所有按钮的选中状�?                    recordTypeBtns.forEach(function(b) {
+                        b.classList.remove('border-4', 'shadow-lg');
+                        b.classList.add('border-2');
+                    });
+                    
+                    // 添加当前按钮的选中状�?                    this.classList.remove('border-2');
+                    this.classList.add('border-4', 'shadow-lg');
+                    
+                    // 保存选中的类�?                    selectedRecordType = this.dataset.type;
+                    console.log('选中的记录类�?', selectedRecordType);
+                    
+                    // 更新礼簿信息显示
+                    updateLedgerInfo(selectedRecordType);
+                    
+                    // 验证表单
+                    validateForm();
+                });
+            });
+
+            // 返回按钮点击事件
+            document.querySelector('#back-btn').addEventListener('click', function() {
+                // 使用浏览器历史记录返回，避免创建新的历史记录�?                window.history.back();
+            });
+            
+            // 非礼金物品开关事�?            document.querySelector('#is-gift-item').addEventListener('change', function() {
+                const amountInput = document.querySelector('#amount');
+                const giftDescriptionContainer = document.querySelector('#gift-description-container');
+                const giftDescription = document.querySelector('#gift-description');
+                
+                if (this.checked) {
+                    // 开启非礼金模式
+                    amountInput.disabled = true;
+                    amountInput.value = '';
+                    amountInput.classList.add('opacity-50');
+                    giftDescriptionContainer.classList.remove('hidden');
+                    giftDescriptionContainer.classList.add('fade-in');
+                    giftDescription.required = true;
+                } else {
+                    // 关闭非礼金模�?                    amountInput.disabled = false;
+                    amountInput.classList.remove('opacity-50');
+                    giftDescriptionContainer.classList.add('hidden');
+                    giftDescription.required = false;
+                }
+                
+                validateForm();
+            });
+            
+            // 快捷金额按钮事件
+            const quickAmountBtns = document.querySelectorAll('.quick-amount-btn');
+            quickAmountBtns.forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const amount = this.dataset.amount;
+                    document.querySelector('#amount').value = amount;
+                    validateForm();
+                });
+            });
+            
+            // 表单验证
+            function validateForm() {
+                const contactName = document.querySelector('#contact-name').value.trim();
+                const amount = document.querySelector('#amount').value.trim();
+                const recordDate = document.querySelector('#record-date').value;
+                const isGiftItem = document.querySelector('#is-gift-item').checked;
+                const giftDescription = document.querySelector('#gift-description').value.trim();
+                const saveBtn = document.querySelector('#save-btn');
+                
+                let isValid = true;
+                
+                // 检查必填字�?                if (!contactName || !recordDate) {
+                    isValid = false;
+                }
+                
+                // 检查记录类型是否已选择
+                if (!selectedRecordType) {
+                    isValid = false;
+                }
+                
+                // 检查金额或物品描述
+                if (!isGiftItem) {
+                    if (!amount || parseFloat(amount) <= 0) {
+                        isValid = false;
+                    }
+                } else {
+                    if (!giftDescription) {
+                        isValid = false;
+                    }
+                }
+                
+                // 更新保存按钮状�?                if (isValid) {
+                    saveBtn.disabled = false;
+                    saveBtn.classList.remove('bg-gray-100', 'text-gray-400');
+                    saveBtn.classList.add('primary-gradient', 'text-white', 'shadow-primary-btn');
+                } else {
+                    saveBtn.disabled = true;
+                    saveBtn.classList.remove('primary-gradient', 'text-white', 'shadow-primary-btn');
+                    saveBtn.classList.add('bg-gray-100', 'text-gray-400');
+                }
+                
+                return isValid;
+            }
+            
+            // 监听表单输入变化
+            const formInputs = document.querySelectorAll('#add-record-form input, #add-record-form textarea');
+            formInputs.forEach(function(input) {
+                input.addEventListener('input', validateForm);
+                input.addEventListener('change', validateForm);
+            });
+            
+            // 保存按钮点击事件
+            document.querySelector('#save-btn').addEventListener('click', function() {
+                if (!validateForm()) {
+                    alert('请填写必填字�?);
+                    return;
+                }
+                
+                // 检查是否选择了记录类�?                if (!selectedRecordType) {
+                    alert('请选择记录类型（收到或送出�?);
+                    return;
+                }
+                
+                // 收集表单数据
+                const formData = {
+                    contactName: document.querySelector('#contact-name').value.trim(),
+                    amount: document.querySelector('#amount').value.trim(),
+                    recordDate: document.querySelector('#record-date').value,
+                    isGiftItem: document.querySelector('#is-gift-item').checked,
+                    giftDescription: document.querySelector('#gift-description').value.trim(),
+                    note: document.querySelector('#note').value.trim(),
+                    ledgerId: ledgerId,
+                    recordType: selectedRecordType
+                };
+                
+                // 调用后端API保存记录
+                this.disabled = true;
+                this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>保存�?..';
+                
+                saveRecord(formData);
+            });
+            
+            // 保存记录到后�?            async function saveRecord(formData) {
+                try {
+                    console.log('开始保存记�?', formData);
+                    
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        alert('请先登录');
+                        window.location.href = 'P-LOGIN.html';
+                        return;
+                    }
+
+                    // 定义API基础路径
+                    const hostname = window.location.hostname || 'localhost';
+                    const protocol = (window.location.protocol === 'file:' || window.location.protocol === 'capacitor:') ? 'http:' : window.location.protocol;
+                    const overrideApiBase3 = localStorage.getItem('API_BASE_OVERRIDE');
+                    const API_BASE = (overrideApiBase3 && overrideApiBase3.trim()) ? overrideApiBase3.replace(/\/+$/, '') : `${protocol}//${hostname}:3030/api`;
+
+                    // 直接使用传入的礼簿ID，不创建新礼�?                    let targetLedgerId = formData.ledgerId;
+                    
+                    // 如果是default值，尝试根据记录类型获取合适的礼簿
+                    if (!targetLedgerId || targetLedgerId === 'default') {
+                        const ledgersResponse = await fetch(`${API_BASE}/ledgers`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        
+                        if (ledgersResponse.ok) {
+                            const ledgersResult = await ledgersResponse.json();
+                            if (ledgersResult.data && ledgersResult.data.length > 0) {
+                                // 根据记录类型选择合适的礼簿
+                                const expectedType = (formData.recordType === 'received') ? '我办�? : '参加别人的事';
+                                const suitableLedger = ledgersResult.data.find(ledger => ledger.type === expectedType);
+                                
+                                if (suitableLedger) {
+                                    targetLedgerId = suitableLedger.id;
+                                    console.log('找到合适的礼簿:', suitableLedger.name, '类型:', suitableLedger.type);
+                                } else {
+                                    // 如果没有找到合适类型的，使用第一个礼�?                                    targetLedgerId = ledgersResult.data[0].id;
+                                    console.log('使用第一个礼�?', ledgersResult.data[0].name, '类型:', ledgersResult.data[0].type);
+                                    console.warn('警告: 没有找到', expectedType, '类型的礼簿，将使用现有礼�?);
+                                }
+                            } else {
+                                throw new Error('没有可用的礼簿，请先创建礼簿');
+                            }
+                        } else {
+                            const errorText = await ledgersResponse.text();
+                            console.error('获取礼簿列表失败:', errorText);
+                            throw new Error('获取礼簿列表失败: ' + errorText);
+                        }
+                    }
+
+                    if (!targetLedgerId) {
+                        throw new Error('无法确定礼簿，请从礼簿页面进入添加记�?);
+                    }
+
+                    const response = await fetch(`${API_BASE}/records`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            ledgerId: targetLedgerId,
+                            contactName: formData.contactName,
+                            amount: formData.isGiftItem ? 0 : parseFloat(formData.amount),
+                            recordDate: formData.recordDate,
+                            isGiftItem: formData.isGiftItem,
+                            giftDescription: formData.giftDescription,
+                            note: formData.note,
+                            recordType: formData.recordType
+                        })
+                    });
+
+                    const result = await response.json();
+                    console.log('保存记录结果:', result);
+
+                    if (response.ok && result.success) {
+                        alert('记录添加成功�?);
+                        window.location.href = `P-LEDGER_DETAIL.html?ledger_id=${targetLedgerId}`;
+                    } else {
+                        let errorMessage = result.message || '保存失败';
+                        // 如果错误信息包含"礼簿"，提供更友好的提�?                        if (errorMessage.includes('礼簿') || errorMessage.includes('礼薄')) {
+                            errorMessage += '\n\n建议：请从礼簿列表页面进入添加记录，或先创建相应类型的礼簿�?;
+                        }
+                        throw new Error(errorMessage);
+                    }
+                } catch (error) {
+                    console.error('保存记录失败:', error);
+                    alert('保存失败: ' + error.message);
+                    
+                    // 恢复按钮状�?                    const saveBtn = document.querySelector('#save-btn');
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = '保存';
+                }
+            }
+
+
+
+
+
+            // 初始化表单验�?            validateForm();
+        });
+    </script>
+</body>
+</html>

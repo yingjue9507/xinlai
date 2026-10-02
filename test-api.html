@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API测试</title>
+</head>
+<body>
+    <h1>API测试</h1>
+    <button id="testBtn">测试联系人API</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            try {
+                // 首先登录获取token
+                const loginResponse = await fetch('http://localhost:3031/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        phoneNumber: '13800138000',
+                        verificationCode: '123456'
+                    })
+                });
+                
+                const loginData = await loginResponse.json();
+                const token = loginData.data.token;
+                console.log('登录成功，Token:', token);
+                
+                // 获取联系人列表
+                const contactsResponse = await fetch('http://localhost:3031/api/contacts', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const contactsData = await contactsResponse.json();
+                console.log('联系人列表:', contactsData);
+                
+                document.getElementById('result').innerHTML = '<pre>' + JSON.stringify(contactsData, null, 2) + '</pre>';
+            } catch (error) {
+                console.error('测试失败:', error);
+                document.getElementById('result').innerHTML = '<p style="color: red;">测试失败: ' + error.message + '</p>';
+            }
+        });
+    </script>
+</body>
+</html>

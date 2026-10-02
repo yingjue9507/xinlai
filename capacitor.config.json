@@ -1,0 +1,9 @@
+{
+	"appId": "com.xinlai.app",
+	"appName": "xinlai-app",
+	"webDir": "新版界面/ui_pages_618336854786",
+	"server": {
+		"androidScheme": "http",
+		"cleartext": true
+	}
+}

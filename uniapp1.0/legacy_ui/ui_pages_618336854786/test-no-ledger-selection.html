@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试移除礼簿选择功能</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-case { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-case a { display: inline-block; margin: 5px 10px 5px 0; padding: 8px 15px; background: #007bff; color: white; text-decoration: none; border-radius: 3px; }
+        .test-case a:hover { background: #0056b3; }
+        .success { color: #28a745; font-weight: bold; }
+        .warning { color: #ffc107; font-weight: bold; }
+        .danger { color: #dc3545; font-weight: bold; }
+        .feature { margin: 10px 0; padding: 10px; background: #f8f9fa; border-left: 4px solid #007bff; }
+        .removed { text-decoration: line-through; color: #999; }
+        .added { color: #28a745; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>移除礼簿选择功能测试</h1>
+    
+    <div class="test-case">
+        <h3>🔧 修复内容</h3>
+        <div class="feature">
+            <strong>问题</strong>：添加往来记录页面出现了重复的礼簿选择功能
+        </div>
+        <div class="feature">
+            <strong>解决方案</strong>：移除礼簿选择器，直接使用传入的礼簿ID
+        </div>
+        
+        <h4>移除的功能：</h4>
+        <ul>
+            <li class="removed">礼簿选择下拉框</li>
+            <li class="removed">礼簿选择事件处理</li>
+            <li class="removed">礼簿选择验证逻辑</li>
+            <li class="removed">loadLedgerOptions函数</li>
+        </ul>
+        
+        <h4>保留的功能：</h4>
+        <ul>
+            <li class="added">自动根据礼簿类型预选记录类型</li>
+            <li class="added">无礼簿ID时的错误提示</li>
+        </ul>
+    </div>
+    
+    <div class="test-case">
+        <h3>🧪 测试场景</h3>
+        
+        <h4>✅ 正常场景（应该工作）</h4>
+        <ol>
+            <li><a href="P-HOME.html" target="_blank">打开首页</a></li>
+            <li>点击"记一笔" → 选择礼簿 → <strong>应该直接进入添加页面</strong></li>
+            <li>点击礼簿 → 点击"手动录入" → <strong>应该直接进入添加页面</strong></li>
+            <li>点击礼簿 → 点击记录 → 点击"添加往来记录" → <strong>应该直接进入添加页面</strong></li>
+        </ol>
+        
+        <h4>❌ 异常场景（应该被阻止）</h4>
+        <ol>
+            <li><a href="P-ADD_RECORD.html" target="_blank">直接访问添加记录页面</a></li>
+            <li><a href="P-ADD_RECORD.html?contactName=张三" target="_blank">只带联系人参数访问</a></li>
+            <li><strong>应该显示错误提示并返回上一页</strong></li>
+        </ol>
+    </div>
+    
+    <div class="test-case">
+        <h3>🎯 预期行为</h3>
+        <div class="success">
+            <ul>
+                <li>所有从正常入口进入的页面都应该直接进入添加页面</li>
+                <li>不应该出现礼簿选择下拉框</li>
+                <li>页面应该根据礼簿类型自动预选"收到"或"送出"</li>
+                <li>直接访问应该被阻止并提示用户</li>
+                <li>保存记录应该正常工作，使用传入的礼簿ID</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-case">
+        <h3>🔗 快速测试链接</h3>
+        
+        <h4>正常测试：</h4>
+        <a href="P-HOME.html" target="_blank">1. 首页测试</a>
+        <span class="success">→ 记一笔 → 选择礼簿</span>
+        
+        <h4>异常测试：</h4>
+        <a href="P-ADD_RECORD.html" target="_blank">2. 直接访问（应失败）</a>
+        <span class="danger">→ 应显示错误提示</span>
+        
+        <a href="P-ADD_RECORD.html?contactName=张三" target="_blank">3. 只有联系人（应失败）</a>
+        <span class="danger">→ 应显示错误提示</span>
+        
+        <h4>正确测试：</h4>
+        <a href="P-ADD_RECORD.html?ledger_id=test-ledger-id" target="_blank">4. 带礼簿ID（应成功）</a>
+        <span class="success">→ 应直接进入添加页面</span>
+    </div>
+    
+    <div class="test-case">
+        <h3>📱 用户体验改进</h3>
+        <div class="feature">
+            <strong>简化流程</strong>：
+            <ul>
+                <li>减少了用户的选择步骤</li>
+                <li>避免了重复的礼簿选择</li>
+                <li>用户意图更明确（从哪个礼簿进来就在哪个礼簿添加）</li>
+                <li>防止了用户选择错误的礼簿</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div class="test-case">
+        <h3>⚠️ 注意事项</h3>
+        <div class="warning">
+            <ul>
+                <li>确保所有入口都正确传递了ledger_id参数</li>
+                <li>测试无参数访问时的错误处理</li>
+                <li>验证保存记录功能是否正常工作</li>
+                <li>检查记录类型是否根据礼簿类型正确预选</li>
+            </ul>
+        </div>
+    </div>
+    
+    <h2>💡 修复说明</h2>
+    <p>这次修复解决了用户体验问题，移除了重复的礼簿选择功能，让添加记录的流程更加简洁和直观。用户现在必须从具体的礼簿页面进入添加记录，确保了数据的正确性和操作的明确性。</p>
+</body>
+</html>

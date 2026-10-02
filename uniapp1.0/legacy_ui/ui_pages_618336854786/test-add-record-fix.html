@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试添加记录功能</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-link {
+            display: inline-block;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+        .test-link:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>添加记录功能测试</h1>
+    
+    <div class="test-section">
+        <h2>测试场景</h2>
+        <p>以下测试链接用于验证添加记录功能在不同场景下的行为：</p>
+        
+        <h3>1. 正常场景（带礼簿ID）</h3>
+        <a href="P-ADD_RECORD.html?ledger_id=test-ledger-id" class="test-link" target="_blank">
+            测试带礼簿ID的添加记录
+        </a>
+        <p><small>应该正常显示添加记录页面，保存时使用指定的礼簿ID</small></p>
+        
+        <h3>2. 无礼簿ID场景</h3>
+        <a href="P-ADD_RECORD.html" class="test-link" target="_blank">
+            测试无礼簿ID的添加记录
+        </a>
+        <p><small>应该允许用户填写表单，在保存时自动选择合适的礼簿</small></p>
+        
+        <h3>3. 类型匹配测试</h3>
+        <p>在无礼簿ID的场景下，测试不同记录类型的礼簿匹配：</p>
+        <ul>
+            <li>选择"收到"类型时，应该优先选择"我办事"类型的礼簿</li>
+            <li>选择"送出"类型时，应该优先选择"参加别人的事"类型的礼簿</li>
+            <li>如果没有匹配类型的礼簿，应该使用第一个可用礼簿并给出警告</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>预期改进效果</h2>
+        <ul>
+            <li>✅ 不再直接阻止无礼簿ID的访问</li>
+            <li>✅ 保存时智能选择合适的礼簿</li>
+            <li>✅ 提供更友好的错误信息</li>
+            <li>✅ 在控制台显示详细的礼簿选择过程</li>
+        </ul>
+    </div>
+    
+    <div class="test-section">
+        <h2>调试信息</h2>
+        <p>打开浏览器开发者工具的控制台，可以看到详细的礼簿选择过程和错误信息。</p>
+    </div>
+</body>
+</html>
