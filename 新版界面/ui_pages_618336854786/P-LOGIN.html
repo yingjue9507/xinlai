@@ -18,7 +18,8 @@
       <button id="submit" class="btn btn-primary btn-block" type="submit">进入心来</button>
     </form>
     <div id="message" class="hidden message"></div>
-    <div class="login-hint">本地测试账号：<strong>13800000000</strong> / <strong>123456</strong><br>也支持开发测试账号 123 / 123。</div>
+    <div class="login-hint">本地测试账号：<strong>13800000000</strong> / <strong>123456</strong><br>手机需与电脑连接同一 Wi-Fi，当前默认服务地址为 <strong>192.168.1.83:3030</strong>。</div>
+    <details class="server-settings"><summary>连接设置（更换电脑或网络时使用）</summary><div class="server-settings-row"><input id="api-base-input" placeholder="http://192.168.1.83:3030/api"><button id="api-base-save" type="button">保存</button></div></details>
     <p class="legal">登录即表示你同意心来的服务条款与隐私说明<br>当前为本地开发测试环境</p>
   </main>
 <script>
@@ -29,8 +30,12 @@
   const message = document.getElementById('message');
   const loginTab = document.getElementById('login-tab');
   const registerTab = document.getElementById('register-tab');
+  const apiBaseInput = document.getElementById('api-base-input');
+  const apiBaseSave = document.getElementById('api-base-save');
   let mode = 'login';
-  function apiBase() { const override = localStorage.getItem('API_BASE_OVERRIDE'); return (override && override.trim() ? override.trim() : 'http://localhost:3030/api').replace(/\/+$/, ''); }
+  apiBaseInput.value = localStorage.getItem('API_BASE_OVERRIDE') || 'http://192.168.1.83:3030/api';
+  apiBaseSave.onclick = () => { const value = apiBaseInput.value.trim().replace(/\/+$/, ''); if (!/^https?:\/\//.test(value)) return setMessage('服务地址需要以 http:// 或 https:// 开头。', 'error'); localStorage.setItem('API_BASE_OVERRIDE', value); setMessage('服务地址已保存。', 'success'); };
+  function apiBase() { const override = localStorage.getItem('API_BASE_OVERRIDE'); return (override && override.trim() ? override.trim() : 'http://192.168.1.83:3030/api').replace(/\/+$/, ''); }
   function setMessage(text, type) { message.textContent = text; message.className = 'message ' + type; }
   function switchMode(next) { mode = next; loginTab.classList.toggle('active', mode === 'login'); registerTab.classList.toggle('active', mode === 'register'); submit.textContent = mode === 'login' ? '进入心来' : '创建账号'; password.setAttribute('autocomplete', mode === 'login' ? 'current-password' : 'new-password'); message.className = 'hidden message'; }
   loginTab.onclick = () => switchMode('login'); registerTab.onclick = () => switchMode('register');

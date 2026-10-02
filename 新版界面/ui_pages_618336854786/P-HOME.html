@@ -28,7 +28,7 @@
 <script>
   const token = localStorage.getItem('token'); if (!token) location.replace('P-LOGIN.html');
   const state = { ledgers: [], recent: [], contacts: [] };
-  const apiBase = () => { const override = localStorage.getItem('API_BASE_OVERRIDE'); return (override && override.trim() ? override.trim() : 'http://localhost:3030/api').replace(/\/+$/, ''); };
+  const apiBase = () => { const override = localStorage.getItem('API_BASE_OVERRIDE'); return (override && override.trim() ? override.trim() : 'http://192.168.1.83:3030/api').replace(/\/+$/, ''); };
   const money = value => '¥' + Number(value || 0).toLocaleString('zh-CN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   const esc = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   async function request(path, options = {}) { const response = await fetch(apiBase() + path, { ...options, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token, ...(options.headers || {}) } }); const result = await response.json().catch(() => ({})); if (response.status === 401) { localStorage.removeItem('token'); location.replace('P-LOGIN.html'); throw new Error('登录已过期'); } if (!response.ok || result.success === false) throw new Error(result.message || '请求失败'); return result.data; }
