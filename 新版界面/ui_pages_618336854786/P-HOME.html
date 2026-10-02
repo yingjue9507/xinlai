@@ -49,7 +49,9 @@
   document.getElementById('record-date').value = new Date().toISOString().slice(0,10);
   document.getElementById('record-form').onsubmit = async event => { event.preventDefault(); const button = event.target.querySelector('button[type=submit]'); button.disabled = true; try { await request('/records', { method: 'POST', body: JSON.stringify({ ledgerId: document.getElementById('record-ledger').value, contactName: document.getElementById('record-contact').value.trim(), amount: Number(document.getElementById('record-amount').value), recordType: document.getElementById('record-type').value, recordDate: document.getElementById('record-date').value, note: document.getElementById('record-note').value.trim(), isGiftItem: false }) }); document.getElementById('record-modal').classList.add('hidden'); event.target.reset(); document.getElementById('record-date').value = new Date().toISOString().slice(0,10); toast('记录已保存'); await load(); } catch (error) { toast(error.message, true); } finally { button.disabled = false; } };
   function logout() { localStorage.removeItem('token'); localStorage.removeItem('user'); location.replace('P-LOGIN.html'); }
-  document.getElementById('logout').onclick = logout; document.getElementById('profile-logout').onclick = logout; load();
+  document.getElementById('logout').onclick = logout; document.getElementById('profile-logout').onclick = logout;
+  const entryTab = new URLSearchParams(location.search).get('tab');
+  load().then(() => { if (['home', 'ledger', 'contact', 'profile'].includes(entryTab)) showTab(entryTab); });
 </script>
 </body>
 </html>
